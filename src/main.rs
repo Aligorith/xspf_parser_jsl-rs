@@ -3,7 +3,7 @@
 
 use std::env;
 
-//mod xspf_parser;
+mod xspf_parser;
 
 /* ********************************************* */
 
@@ -31,7 +31,7 @@ type XspfProcessingModeFunc = fn(in_file: &str, out_file: Option<&String>);
 fn list_output_mode(in_file: &str, out_file: Option<&String>)
 {
 	println!("List in='{0}', out={1:?}", in_file, out_file);
-	//let xspf = xspf_parser::parse_xspf(in_file); 
+	let xspf = xspf_parser::parse_xspf(in_file); 
 }
 
 
@@ -49,10 +49,14 @@ fn handle_xspf_processing_mode(args: &Vec<String>, processing_func: XspfProcessi
 	
 	match in_file {
 		Some(f) => {
+			if f.ends_with(".xspf") == false {
+				println!("WARNING: Input file should have the '.xspf' extension");
+			}
+			
 			processing_func(f, out_file);
 		},
 		None => {
-			println!("ERROR: You need to supply a .xspf filename as the second argument!\n");
+			println!("ERROR: You need to supply a .xspf filename as the second argument\n");
 			print_usage_info();
 		}
 	}
