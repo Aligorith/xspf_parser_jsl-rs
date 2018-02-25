@@ -30,6 +30,8 @@ pub struct Track {
 	path: String,
 }
 
+/* ------------------------------------------- */
+
 /* Container for everything about the playlist */
 pub struct XSPF_Playlist {
 	tracks : Vec<Track>
@@ -61,12 +63,17 @@ fn parse_file(filename: &str) -> String
 /* Process the XML Tree */
 pub fn parse_xspf(filename: &str) -> Option<XSPF_Playlist>
 {
+	/* 1) Read contents of file to a string */
 	let xml = parse_file(filename);
-	let doc = parser::parse(xml.as_ref()).expect("Failed to parse");
 	
+	/* 2) Parse the file into a DOM tree*/
+	// FIXME: properly handle the parsing failures here
+	let package = parser::parse(xml.as_ref()).expect("Failed to parse");
+	let doc = package.as_document();
 	
-	
-	None // XXX
+	/* 3) Create and return new playlist object from the DOM */
+	let playlist = XSPF_Playlist::from_xml_doc(doc);
+	Some(playlist)
 }
 
 /* ********************************************** */
