@@ -35,44 +35,58 @@ fn main()
 {
 	let args: Vec<String> = env::args().collect();
 	
-	match args.get(1) {
-		Some("list") => {
-			let in_file = args.get(2);
-			let out_file = args.get(3);
+	if let Some(mode) = args.get(1) {
+		/* A mode string was supplied - Process it!
+		 *
+		 * XXX: It would've been nice to handle the unsupplied case here too,
+		 *      but then, we wouldn't be able to do the mode.as_ref() thing
+		 *      that's needed to make string-case matching work
+		 *      (i.e. otherwise we get type errors about "std::string::String vs str")
+		 */
+		match mode.as_ref() {
+			"list" => {
+				let in_file = args.get(2);
+				let out_file = args.get(3);
+				
+				match in_file {
+					Some(f) => {
+						list_output_mode(f, out_file);
+					},
+					None => {
+						println!("ERROR: You need to supply a .xspf filename as the second argument!\n");
+						print_usage_info();
+					}
+				}
+			},
 			
-			match in_file {
-				Some(f) => {
-					list_output_mode(f, out_file);
-				},
-				None => {
-					println!("ERROR: You need to supply a .xspf filename as the second argument!\n");
-					print_usage_info();
+			"json" => {
+				let in_file = args.get(2);
+				let out_file = args.get(3);
+				
+				match in_file {
+					Some(f) => {
+						json_output_mode(f, out_file);
+					},
+					None => {
+						println!("ERROR: You need to supply a .xspf filename as the second argument!\n");
+						print_usage_info();
+					}
 				}
 			}
-		},
-		
-		Some("json") => {
-			let in_file = args.get(2);
-			let out_file = args.get(3);
 			
-			match in_file {
-				Some(f) => {
-					json_output_mode(f, out_file);
-				},
-				None => {
-					println!("ERROR: You need to supply a .xspf filename as the second argument!\n");
-					print_usage_info();
-				}
+			"help" => {
+				print_usage_info();
+			},
+			
+			arg => {
+				println!("Unrecognised option: '{0:?}'", arg);
+				print_usage_info();
 			}
 		}
-		
-		Some("help") | None => {
-			print_usage_info();
-		},
-		
-		Some(arg) => {
-			println!("Unrecognised option: '{0:?}'", arg);
-			print_usage_info();
-		}
+	}
+	else {
+		/* No mode arg at all - i.e. user really doesn't know what they're doing */
+		/* XXX: ideally, this would have been included above, instead of in here... */
+		print_usage_info();
 	}
 }
