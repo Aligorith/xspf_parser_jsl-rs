@@ -5,6 +5,8 @@ use std::env;
 
 //mod xspf_parser;
 
+/* ********************************************* */
+
 fn print_usage_info()
 {
 	let s = indoc!(
@@ -20,16 +22,43 @@ fn print_usage_info()
 	println!("{}", s);
 }
 
+/* ********************************************* */
+
+type XspfProcessingModeFunc = fn(in_file: &str, out_file: Option<&String>);
+
+/* --------------------------------------------- */
+
 fn list_output_mode(in_file: &str, out_file: Option<&String>)
 {
 	println!("List in='{0}', out={1:?}", in_file, out_file);
 	//let xspf = xspf_parser::parse_xspf(in_file); 
 }
 
+
 fn json_output_mode(in_file: &str, out_file: Option<&String>)
 {
 	println!("JSON in='{0}', out={1:?}", in_file, out_file);
 }
+
+/* --------------------------------------------- */
+
+fn handle_xspf_processing_mode(args: &Vec<String>, processing_func: XspfProcessingModeFunc)
+{
+	let in_file = args.get(2);
+	let out_file = args.get(3);
+	
+	match in_file {
+		Some(f) => {
+			processing_func(f, out_file);
+		},
+		None => {
+			println!("ERROR: You need to supply a .xspf filename as the second argument!\n");
+			print_usage_info();
+		}
+	}
+}
+
+/* ********************************************* */
 
 fn main()
 {
@@ -45,33 +74,11 @@ fn main()
 		 */
 		match mode.as_ref() {
 			"list" => {
-				let in_file = args.get(2);
-				let out_file = args.get(3);
-				
-				match in_file {
-					Some(f) => {
-						list_output_mode(f, out_file);
-					},
-					None => {
-						println!("ERROR: You need to supply a .xspf filename as the second argument!\n");
-						print_usage_info();
-					}
-				}
+				handle_xspf_processing_mode(&args, list_output_mode);
 			},
 			
 			"json" => {
-				let in_file = args.get(2);
-				let out_file = args.get(3);
-				
-				match in_file {
-					Some(f) => {
-						json_output_mode(f, out_file);
-					},
-					None => {
-						println!("ERROR: You need to supply a .xspf filename as the second argument!\n");
-						print_usage_info();
-					}
-				}
+				handle_xspf_processing_mode(&args, json_output_mode);
 			}
 			
 			"help" => {
