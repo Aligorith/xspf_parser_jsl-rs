@@ -8,8 +8,105 @@ use self::minidom::Element;
 
 use std::fs::File;
 use std::io::prelude::*;
-//use std::path::Path;
+use std::str::FromStr;
+use std::path::Path;
 
+
+/* ********************************************** */
+/* Convenience Macros */
+// XXX: These should go into 
+
+/* ********************************************** */
+/* Utility Types */
+
+/* Track Types */
+#[derive(Debug)]
+enum TrackType {
+	Unknown,
+	ViolinLayering,
+	MuseScore,
+	Piano,
+	Voice,
+}
+
+/* ------------------------------------------- */
+
+/* Filename Extension */
+#[allow(non_camel_case_types)]
+enum TrackExtension {
+	mp3,
+	flac,
+	ogg,
+	m4a,
+	mp4,
+}
+
+/* From https://www.reddit.com/r/rust/comments/2vqama/parse_string_as_enum_value/cojzafn/
+ * Usage: string.parse::<TrackExtension>()
+ */
+impl FromStr for TrackExtension {
+	type Err = (&'static str);
+	
+    fn from_str(s: &str) -> Result<TrackExtension, Self::Err> {
+        match s {
+            "mp3"  => Ok(TrackExtension::mp3),
+            "flac" => Ok(TrackExtension::flac),
+            "ogg"  => Ok(TrackExtension::ogg),
+            "m4a"  => Ok(TrackExtension::m4a),
+            "mp4"  => Ok(TrackExtension::mp4),
+            _      => Err("Unknown extension")
+        }
+    }
+}
+
+/* ------------------------------------------- */
+
+
+/* Filename Info Components
+ * Internal use only, for easier extraction of interesting aspects
+ */
+struct FilenameInfoComponents {
+	/* Track Type */
+	track_type : TrackType,
+	/* Sequence Index in that day's sessions */
+	index : i32,
+	
+	/* Descriptive name (all underscores/symbols get normalised out) */
+	name: String,
+	
+	/* filename extension */
+	extn : TrackExtension
+}
+
+impl FilenameInfoComponents {
+	/* Constructor from filename */
+	fn new(filename: &str) -> Self
+	{
+		/* Use Path to split the "name" portion from the extension */
+		let path = Path::new(filename);
+		let name_part: &str = path.file_stem().unwrap()  /* OsString - This should be ok to unwrap like this */
+		                          .to_str().unwrap();    /* &str - Need to unwrap the converted version to get what we need */
+		
+		/* Use regex to extract necessary parts */
+		let track_type = TrackType::Unknown; // XXX placeholder
+		let index = 1;
+		let name = name_part; // XXX
+		
+		/* Extract the extension info */
+		let extn_str = path.extension().unwrap()    /* get OsString */
+		                   .to_str().unwrap();      /* get &str - Need to unwrap the converted version */
+		let extn = extn_str.parse::<TrackExtension>()
+		                   .unwrap();               /* get contents of mandatory Result */
+		
+		/* Return new instance */
+		FilenameInfoComponents {
+			track_type : track_type,
+			index : index,
+			name : name.to_string(),
+			extn : extn,
+		}
+	}
+}
 
 /* ********************************************** */
 /* Playlist Types */
@@ -32,8 +129,6 @@ pub struct Track {
 }
 
 const FILE_URI_PREFIX: &'static str = "file:///";
-const MP3_EXTN: &'static str = ".mp3";
-const FLAC_EXTN: &'static str = ".flac";
 
 impl Track {
 	/* Generate a track element from a file path */
@@ -49,23 +144,12 @@ impl Track {
 		let date = path_elems.pop().unwrap().to_string();
 		let filename = path_elems.pop().unwrap().to_string();
 		
-		// FIXME: This needs some fancy regex filtering here...
-		let name = if filename.ends_with(MP3_EXTN) {
-		               let end_idx = filename.len() - MP3_EXTN.len() - 1;
-		               filename[ .. end_idx].to_string()
-		           }
-		           else if filename.ends_with(FLAC_EXTN) {
-		                let end_idx = filename.len() - FLAC_EXTN.len() - 1;
-		                filename[ .. end_idx].to_string()
-		           }
-		           else {
-		                filename.to_string()
-		           };
+		let name_info = FilenameInfoComponents::new(filename.as_ref());
 		
 		
 		/* Construct and return a track */
 		Ok(Track {
-			name: name.clone(),
+			name: name_info.name,
 			duration: None,  /* Currently unknown */
 			filename: filename.clone(),
 			date: date.clone(),
