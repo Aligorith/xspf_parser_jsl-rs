@@ -14,7 +14,8 @@ fn print_usage_info()
                   
                         where <mode> is one of the following:
                            * help    Prints this text
-                           * list    Writes the filenames of all tracks in the playlist to <outfile>
+                           * dump    Prints summary of the important identifying info gained from the playlist
+                           * list    Writes the file paths of all tracks in the playlist to <outfile>
                            * json    Extracts the useful info out of the file, and dumps to JSON format
                                      in <outfile> for easier handling
                   "
@@ -28,10 +29,9 @@ type XspfProcessingModeFunc = fn(in_file: &str, out_file: Option<&String>);
 
 /* --------------------------------------------- */
 
-fn list_output_mode(in_file: &str, out_file: Option<&String>)
+/* NOTE: "out_file" is unused/unneeded, hence the underscore */
+fn dump_output_mode(in_file: &str, _out_file: Option<&String>)
 {
-	println!("List in='{0}', out={1:?}", in_file, out_file);
-	
 	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
 		println!("{0} Tracks:", xspf.len());
 		for (i, track) in xspf.tracks.iter().enumerate() {
@@ -41,10 +41,21 @@ fn list_output_mode(in_file: &str, out_file: Option<&String>)
 	}
 }
 
+fn list_output_mode(in_file: &str, out_file: Option<&String>)
+{
+	println!("List in='{0}', out={1:?}", in_file, out_file);
+	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
+		// TODO: Write file
+	}
+}
+
 
 fn json_output_mode(in_file: &str, out_file: Option<&String>)
 {
 	println!("JSON in='{0}', out={1:?}", in_file, out_file);
+	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
+		// TODO: Serialise playlist to file
+	}
 }
 
 /* --------------------------------------------- */
@@ -69,6 +80,7 @@ fn handle_xspf_processing_mode(args: &Vec<String>, processing_func: XspfProcessi
 	}
 }
 
+
 /* ********************************************* */
 
 fn main()
@@ -84,6 +96,10 @@ fn main()
 		 *      (i.e. otherwise we get type errors about "std::string::String vs str")
 		 */
 		match mode.as_ref() {
+			"dump" => {
+				handle_xspf_processing_mode(&args, dump_output_mode);
+			},
+			
 			"list" => {
 				handle_xspf_processing_mode(&args, list_output_mode);
 			},
