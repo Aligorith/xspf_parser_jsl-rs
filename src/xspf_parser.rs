@@ -147,13 +147,8 @@ impl XspfPlaylist {
 				
 				"trackList" => {
 					for e_track in e_section.children() {
-						println!("Processing track...");
 						if let Ok(track) = Track::from_xml_elem(e_track) {
-							println!("   Added {0:?}", track);
 							tracklist.push(track);
-						}
-						else {
-							println!("   Error encountered");
 						}
 					}
 					
