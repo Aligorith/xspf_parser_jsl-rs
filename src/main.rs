@@ -31,7 +31,14 @@ type XspfProcessingModeFunc = fn(in_file: &str, out_file: Option<&String>);
 fn list_output_mode(in_file: &str, out_file: Option<&String>)
 {
 	println!("List in='{0}', out={1:?}", in_file, out_file);
-	let xspf = xspf_parser::parse_xspf(in_file); 
+	
+	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
+		println!("{0} Tracks:", xspf.len());
+		for (i, track) in xspf.tracks.iter().enumerate() {
+			println!("  {0} | filename = '{1}', date = {2}, duration = {3:?}",
+			         i, track.filename, track.date, track.duration);
+		}
+	}
 }
 
 
