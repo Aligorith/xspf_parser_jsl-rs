@@ -6,15 +6,14 @@
 extern crate minidom;
 use self::minidom::Element;
 
+//#[macro_use] extern crate lazy_static;
+extern crate regex;
+use self::regex::Regex;
+
 use std::fs::File;
 use std::io::prelude::*;
 use std::str::FromStr;
 use std::path::Path;
-
-
-/* ********************************************** */
-/* Convenience Macros */
-// XXX: These should go into 
 
 /* ********************************************** */
 /* Utility Types */
@@ -34,6 +33,9 @@ enum TrackType {
 /* Filename Extension */
 #[allow(non_camel_case_types)]
 enum TrackExtension {
+	/* Placeholder - Only used when constructing the type */
+	Placeholder,
+	
 	mp3,
 	flac,
 	ogg,
@@ -79,6 +81,46 @@ struct FilenameInfoComponents {
 }
 
 impl FilenameInfoComponents {
+	/* Internal-Use Constructor - Run regexes on a name string (minus the extension)
+	 * and generate a stub instance with the affected fields filled out
+	 */
+	fn from_file_stem(filename: &str) -> Self
+	{
+		/* Defines for the regex expressions to use - all get initialised on first run, then can be accessed readily later */
+		lazy_static! {
+			/* Violin Layering */
+			static ref RE_ViolinLayering : Regex = Regex::new(r"^v(?P<index>\d+)-(?P<id>.+)$").unwrap();
+			
+			/* Muse Score */
+			static ref RE_MuseScore : Regex = Regex::new(r"^(?P<date>\d{8})-(?P<index>\d+)-(?P<id>.+)$").unwrap();
+		}
+		
+		/* Define placeholder values */
+		let mut track_type = TrackType::Unknown;
+		let mut index = 1;
+		let mut name = filename.to_string(); //String::new();
+		
+		/* Try each of the regex'es to find a match */
+		if RE_ViolinLayering.is_match(filename) {
+			track_type = TrackType::ViolinLayering;
+			// TODO: extract values out of captures
+		}
+		else if RE_MuseScore.is_match(filename) {
+			track_type = TrackType::MuseScore;
+			// TODO: extract values out of captures
+		}
+		
+		
+		/* Return new instance */
+		FilenameInfoComponents {
+			track_type : track_type,
+			index : index,
+			name : name.to_string(),
+			extn : TrackExtension::Placeholder,
+		}
+	}
+	
+	
 	/* Constructor from filename */
 	fn new(filename: &str) -> Self
 	{
@@ -87,10 +129,8 @@ impl FilenameInfoComponents {
 		let name_part: &str = path.file_stem().unwrap()  /* OsString - This should be ok to unwrap like this */
 		                          .to_str().unwrap();    /* &str - Need to unwrap the converted version to get what we need */
 		
-		/* Use regex to extract necessary parts */
-		let track_type = TrackType::Unknown; // XXX placeholder
-		let index = 1;
-		let name = name_part; // XXX
+		/* Generate the stub instance, with all the name-parts filled out */
+		let mut fic = Self::from_file_stem(name_part);
 		
 		/* Extract the extension info */
 		let extn_str = path.extension().unwrap()    /* get OsString */
@@ -98,13 +138,11 @@ impl FilenameInfoComponents {
 		let extn = extn_str.parse::<TrackExtension>()
 		                   .unwrap();               /* get contents of mandatory Result */
 		
+		/* ... and set extension now */
+		fic.extn = extn;
+		
 		/* Return new instance */
-		FilenameInfoComponents {
-			track_type : track_type,
-			index : index,
-			name : name.to_string(),
-			extn : extn,
-		}
+		fic
 	}
 }
 

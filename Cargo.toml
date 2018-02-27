@@ -7,3 +7,5 @@ authors = ["Joshua Leung <aligorith@gmail.com>"]
 indoc = "0.2"
 minidom = "*"
 
+regex = "0.2"
+lazy_static = "1.0.0"
