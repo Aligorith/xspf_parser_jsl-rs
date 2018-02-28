@@ -69,6 +69,7 @@ fn get_output_stream(out_file: Option<&String>) -> Box<Write>
 
 /* --------------------------------------------- */
 
+/* Debug mode showing summary of most salient information about the contents of the playlist */
 /* NOTE: "out_file" is unused/unneeded, hence the underscore */
 fn dump_output_mode(in_file: &str, _out_file: Option<&String>)
 {
@@ -83,6 +84,7 @@ fn dump_output_mode(in_file: &str, _out_file: Option<&String>)
 }
 
 
+/* Extract filenames for all tracks from the playlist */
 fn list_output_mode(in_file: &str, out_file: Option<&String>)
 {
 	println!("List in='{0}', out={1:?}", in_file, out_file);
@@ -99,6 +101,7 @@ fn list_output_mode(in_file: &str, out_file: Option<&String>)
 }
 
 
+/* Extract all the relevant info from playlist, and dump it into a JSON file for further processing */
 fn json_output_mode(in_file: &str, out_file: Option<&String>)
 {
 	println!("JSON in='{0}', out={1:?}", in_file, out_file);
@@ -125,11 +128,12 @@ fn json_output_mode(in_file: &str, out_file: Option<&String>)
 }
 
 
+/* Compute and display summary of total playing time of playlist */
 /* NOTE: out_file is unneeded, as there's nothing worth writing to a file */
 // TODO: Warn if outfile is provided, indicating that it'll be ignored
 fn total_duration_mode(in_file: &str, _out_file: Option<&String>)
 {
-	println!("Computing Total Duration:");
+	println!("Total Duration Summary:");
 	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
 		/* Compute duration */
 		let result = xspf.total_duration();
@@ -147,6 +151,7 @@ fn total_duration_mode(in_file: &str, _out_file: Option<&String>)
 }
 
 
+/* Copy all files listed in playlist to a single folder */
 fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 {
 	if let Some(out) = out_path {
