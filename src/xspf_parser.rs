@@ -75,7 +75,7 @@ impl fmt::Debug for TrackDuration {
 /* Track Types */
 #[derive(Debug)]
 pub enum TrackType {
-	Unknown,
+	UnknownType,
 	ViolinLayering,
 	MuseScore,
 	Piano,
@@ -86,15 +86,14 @@ impl TrackType {
 	/* Get an abbreviated name for more compact display */
 	fn shortname(&self) -> String
 	{
-		let s = match self {
-					Unknown        => "?",
-					ViolinLayering => "VL",
-					MuseScore      => "MS",
-					Piano          => "P",
-					Voice          => "V",
-				};
-		
-		s.to_string()
+		match *self {
+			TrackType::UnknownType    => "?".to_string(),
+			TrackType::ViolinLayering => "VL".to_string(),
+			TrackType::MuseScore      => "MS".to_string(),
+			TrackType::Piano          => "P".to_string(),
+			TrackType::Voice          => "V".to_string(),
+			_                         => "XXX".to_string()
+		}
 	}
 }
 
@@ -160,25 +159,30 @@ impl FilenameInfoComponents {
 		/* Defines for the regex expressions to use - all get initialised on first run, then can be accessed readily later */
 		lazy_static! {
 			/* Violin Layering */
-			static ref RE_ViolinLayering : Regex = Regex::new(r"^v(?P<index>\d+)-(?P<id>.+)$").unwrap();
+			static ref RE_VIOLIN_LAYERING : Regex = Regex::new(r"^v(?P<index>\d+)(?P<variant>[[:alpha:]]?)-(?P<id>.+)$").unwrap();
 			
 			/* Muse Score */
-			static ref RE_MuseScore : Regex = Regex::new(r"^(?P<date>\d{8})-(?P<index>\d+)-(?P<id>.+)$").unwrap();
+			static ref RE_MUSE_SCORE : Regex      = Regex::new(r"^(?P<date>\d{8})(?P<variant>[[:alpha:]]?)-(?P<index>\d+)-(?P<id>.+)$").unwrap();
 		}
 		
 		/* Define placeholder values */
-		let mut track_type = TrackType::Unknown;
+		let mut track_type = TrackType::UnknownType;
 		let mut index = 1;
 		let mut name = filename.to_string(); //String::new();
 		
 		/* Try each of the regex'es to find a match */
-		if RE_ViolinLayering.is_match(filename) {
+		if RE_VIOLIN_LAYERING.is_match(filename) {
 			track_type = TrackType::ViolinLayering;
 			// TODO: extract values out of captures
+			println!("track type = VL - {:?}", track_type);
 		}
-		else if RE_MuseScore.is_match(filename) {
+		else if RE_MUSE_SCORE.is_match(filename) {
 			track_type = TrackType::MuseScore;
 			// TODO: extract values out of captures
+			println!("track type = MS");
+		}
+		else {
+			println!("track type = unmatched");
 		}
 		
 		
