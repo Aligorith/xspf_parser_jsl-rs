@@ -1,3 +1,6 @@
 TODO List:
 * Tests for regex
 * Mode to copy source files to a particular folder, with track number info appended to names
+* Split TrackDuration into its own file/module
+* Test files for general case
+* Error handling for file IO
