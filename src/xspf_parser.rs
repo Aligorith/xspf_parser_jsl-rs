@@ -252,7 +252,7 @@ impl FilenameInfoComponents {
 		}
 		else {
 			let track_type = TrackType::UnknownType;
-			let index = 1;
+			let index = 0;
 			let name = filename.to_string(); //String::new();
 			
 			/* Return new instance */
