@@ -14,9 +14,64 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::str::FromStr;
 use std::path::Path;
+use std::fmt;
 
 /* ********************************************** */
 /* Utility Types */
+
+/* Track Duration */
+type TrackDuration = i64;
+
+trait MillisecondTimeCode {
+	/* Convert from milliseconds to seconds */
+	fn to_secs(&self) -> f64;
+	
+	/* Convert from milliseconds to minutes */
+	fn to_mins(&self) -> f64;
+	
+	/* Convert from milliseconds to "mins:secs" timecode string */
+	fn to_timecode(&self) -> String;
+}
+
+impl MillisecondTimeCode for TrackDuration {
+	/* Convert seconds */
+	fn to_secs(&self) -> f64
+	{
+		(*self as f64) / 1000.0_f64
+	}
+	
+	/* Convert to minutes */
+	fn to_mins(&self) -> f64
+	{
+		let secs = self.to_secs();
+		secs / 60.0_f64
+	}
+	
+	/* Convert from milliseconds to "mins:secs" timecode string */
+	fn to_timecode(&self) -> String
+	{
+		/* Total seconds - We don't care about the leftover milliseconds */
+		let total_secs = self.to_secs() as i64;
+		
+		/* mins:secs */
+		let mins: i64 = total_secs / 60;
+		let secs: i64 = total_secs % 60;
+		
+		/* output string */
+		format!("{}:{}", mins, secs)
+	}
+}
+
+impl fmt::Display for TrackDuration {
+	/* Display timecodes instead of raw ints when printing */
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	{
+		write!(f, "{}", self.to_timecode())
+	}
+}
+
+
+/* ------------------------------------------- */
 
 /* Track Types */
 #[derive(Debug)]
@@ -155,7 +210,7 @@ pub struct Track {
 	/* Descriptive name assigned to this track */
 	pub name: String,
 	/* Duration (in ms) of the track - as stored in the file */
-	pub duration: Option<i64>,
+	pub duration: Option<TrackDuration>,
 	
 	/* Full name of the track itself (v<num>_<name>.<mp3/flac>) */
 	pub filename: String,
@@ -175,12 +230,14 @@ impl Track {
 		/* full unmodfied path */
 		let fullpath = path.to_string();
 		
-		/* extra filename and date from the last parts of the path */
+		/* extra filename and date from the last parts of the path 
+		 * WARNING: We're extracting these in reverse order! So first filename, then date!
+		 */
 		// TODO: Sanity checking!
 		let mut path_elems : Vec<&str> = fullpath.split("/").collect();
 		
-		let date = path_elems.pop().unwrap().to_string();
 		let filename = path_elems.pop().unwrap().to_string();
+		let date = path_elems.pop().unwrap().to_string();
 		
 		let name_info = FilenameInfoComponents::new(filename.as_ref());
 		
