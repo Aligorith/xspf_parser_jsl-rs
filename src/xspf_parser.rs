@@ -129,7 +129,7 @@ pub enum TrackType {
 
 impl TrackType {
 	/* Get an abbreviated name for more compact display */
-	fn shortname(&self) -> String
+	pub fn shortname(&self) -> String
 	{
 		match *self {
 			TrackType::UnknownType    => "?".to_string(),
@@ -137,6 +137,18 @@ impl TrackType {
 			TrackType::MuseScore      => "MS".to_string(),
 			TrackType::Piano          => "P".to_string(),
 			TrackType::Voice          => "V".to_string(),
+		}
+	}
+	
+	/* Get abbreviated name that's safe for use in filenames */
+	pub fn shortname_safe(&self) -> String
+	{
+		match *self {
+			/* Only the "unknown" type needs special handling right now... */
+			TrackType::UnknownType   => "t".to_string(),
+			
+			/* Everything else can use the standard way */
+			_                        => self.shortname(),
 		}
 	}
 }
