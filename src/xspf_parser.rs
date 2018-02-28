@@ -92,7 +92,6 @@ impl TrackType {
 			TrackType::MuseScore      => "MS".to_string(),
 			TrackType::Piano          => "P".to_string(),
 			TrackType::Voice          => "V".to_string(),
-			_                         => "XXX".to_string()
 		}
 	}
 }
