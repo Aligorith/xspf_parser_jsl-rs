@@ -1,6 +1,4 @@
 TODO List:
-* Fix module/crate handling 
-* Regex handling of filename extraction
 * Tests for regex
 * Serde-JSON (for writing JSON)
 * List mode writing
