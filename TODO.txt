@@ -1,4 +1,3 @@
 TODO List:
 * Tests for regex
 * Mode to copy source files to a particular folder, with track number info appended to names
-* Compute total length of playlist
