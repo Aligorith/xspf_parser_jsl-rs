@@ -9,6 +9,10 @@
 
 use std::env;
 
+use std::fs::File;
+use std::path::Path;
+use std::io::{self, Write};
+
 mod xspf_parser;
 
 /* ********************************************* */
@@ -35,6 +39,24 @@ type XspfProcessingModeFunc = fn(in_file: &str, out_file: Option<&String>);
 
 /* --------------------------------------------- */
 
+/* Handle the "out_file" parameter to determine if we're writing to stdout or a named file */
+// FIXME: Handle errors with not being able to open the file
+fn get_output_stream(out_file: Option<&String>) -> Box<Write>
+{
+	let out_writer = match out_file {
+		Some(x) => {
+			let path = Path::new(x);
+			Box::new(File::create(&path).unwrap()) as Box<Write>
+		},
+		None => {
+			Box::new(io::stdout()) as Box<Write>
+		},
+	};
+	out_writer
+}
+
+/* --------------------------------------------- */
+
 /* NOTE: "out_file" is unused/unneeded, hence the underscore */
 fn dump_output_mode(in_file: &str, _out_file: Option<&String>)
 {
@@ -52,7 +74,14 @@ fn list_output_mode(in_file: &str, out_file: Option<&String>)
 {
 	println!("List in='{0}', out={1:?}", in_file, out_file);
 	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
-		// TODO: Write file
+		/* Get output stream to write to */
+		let mut out : Box<Write> = get_output_stream(out_file);
+		
+		/* Write out the full filepath for each track to separate lines in the output stream */
+		for track in xspf.tracks.iter() {
+			// FIXME: How do we handle the Result<> here?
+			writeln!(out, "{0}", track.path);
+		}
 	}
 }
 
