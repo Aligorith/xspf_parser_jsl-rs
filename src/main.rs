@@ -187,7 +187,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 			for (track_idx, track) in xspf.tracks.iter().enumerate() {
 				/* Construct filename for copied file - it needs to have enough metadata to figure out what's going on */
 				let dst_filename = format!("Track{track_idx:0tixw$}-{date}-{tt}{index:02}_{name}.{ext:?}",
-				                           track_idx=track_idx,
+				                           track_idx=track_idx + 1,
 				                           tixw=track_index_width,
 				                           date=track.date,
 				                           tt=track.info.track_type.shortname_safe(),
