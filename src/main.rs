@@ -102,7 +102,7 @@ fn json_output_mode(in_file: &str, out_file: Option<&String>)
 		
 		/* Serialise XSPF to a JSON string */
 		// FIXME: Warn when we cannot serialise
-		match serde_json::to_string(&xspf) {
+		match serde_json::to_string_pretty(&xspf) {
 			Ok(j) => {
 				/* Write entire json string to output */
 				// FIXME: How do we handle the Result<> here?
