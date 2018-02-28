@@ -11,7 +11,7 @@
 extern crate serde;
 extern crate serde_json;
 
-use serde_json::Error;
+//use serde_json::Error;
 
 use std::env;
 use std::process;

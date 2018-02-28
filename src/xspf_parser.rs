@@ -25,6 +25,7 @@ use std::ops::{Add, AddAssign};
 #[derive(Serialize, Deserialize)]
 pub struct TrackDuration(i64);
 
+#[allow(dead_code)]
 impl TrackDuration {
 	/* Convert from milliseconds to seconds */
 	pub fn to_secs(&self) -> f64
