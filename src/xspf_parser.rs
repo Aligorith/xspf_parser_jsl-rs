@@ -20,6 +20,7 @@ use std::fmt;
 /* Utility Types */
 
 /* Track Duration */
+#[derive(Serialize, Deserialize)]
 pub struct TrackDuration(i64);
 
 impl TrackDuration {
@@ -73,6 +74,7 @@ impl fmt::Debug for TrackDuration {
 /* ------------------------------------------- */
 
 /* Track Types */
+#[derive(Serialize, Deserialize)]
 #[derive(Debug)]
 pub enum TrackType {
 	UnknownType,
@@ -99,6 +101,7 @@ impl TrackType {
 /* ------------------------------------------- */
 
 /* Filename Extension */
+#[derive(Serialize, Deserialize)]
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
 pub enum TrackExtension {
@@ -136,6 +139,7 @@ impl FromStr for TrackExtension {
 /* Filename Info Components
  * Internal use only, for easier extraction of interesting aspects
  */
+#[derive(Serialize, Deserialize)]
 pub struct FilenameInfoComponents {
 	/* Track Type */
 	pub track_type : TrackType,
@@ -248,6 +252,7 @@ impl fmt::Debug for FilenameInfoComponents {
 /* Playlist Types */
 
 /* A track listing in the playlist */
+#[derive(Serialize, Deserialize)]
 #[derive(Debug)]
 pub struct Track {
 	/* Full path (extracted from the file) */
@@ -345,6 +350,7 @@ impl Track {
 /* ------------------------------------------- */
 
 /* Container for everything about the playlist */
+#[derive(Serialize, Deserialize)]
 #[derive(Debug)]
 pub struct XspfPlaylist {
 	pub tracks : Vec<Track>,

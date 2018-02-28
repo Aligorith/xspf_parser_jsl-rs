@@ -5,9 +5,16 @@
 /* macro_use defines need to happen in the crate root - https://stackoverflow.com/a/39175997/6531515 */
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate indoc;
+#[macro_use] extern crate serde_derive;
 #[macro_use] mod logic_macros;
 
+extern crate serde;
+extern crate serde_json;
+
+use serde_json::Error;
+
 use std::env;
+use std::process;
 
 use std::fs::File;
 use std::path::Path;
@@ -90,7 +97,24 @@ fn json_output_mode(in_file: &str, out_file: Option<&String>)
 {
 	println!("JSON in='{0}', out={1:?}", in_file, out_file);
 	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
-		// TODO: Serialise playlist to file
+		/* Get output stream to write to */
+		let mut out : Box<Write> = get_output_stream(out_file);
+		
+		/* Serialise XSPF to a JSON string */
+		// FIXME: Warn when we cannot serialise
+		match serde_json::to_string(&xspf) {
+			Ok(j) => {
+				/* Write entire json string to output */
+				// FIXME: How do we handle the Result<> here?
+				writeln!(out, "{}", j);
+			},
+			
+			// FIXME: handle specific cases?
+			Err(e) => {
+				eprintln!("Couldn't convert to playlist data to JSON - {:?}", e);
+				process::exit(1);
+			}
+		}
 	}
 }
 
