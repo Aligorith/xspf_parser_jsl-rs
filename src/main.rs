@@ -31,10 +31,13 @@ fn print_usage_info()
                   
                         where <mode> is one of the following:
                            * help    Prints this text
+                           
                            * dump    Prints summary of the important identifying info gained from the playlist
                            * list    Writes the file paths of all tracks in the playlist to <outfile>
                            * json    Extracts the useful info out of the file, and dumps to JSON format
                                      in <outfile> for easier handling
+                           
+                           * runtime Calculates the total running time of the playlist
                   "
                   );
 	println!("{}", s);
@@ -77,6 +80,7 @@ fn dump_output_mode(in_file: &str, _out_file: Option<&String>)
 	}
 }
 
+
 fn list_output_mode(in_file: &str, out_file: Option<&String>)
 {
 	println!("List in='{0}', out={1:?}", in_file, out_file);
@@ -114,6 +118,26 @@ fn json_output_mode(in_file: &str, out_file: Option<&String>)
 				eprintln!("Couldn't convert to playlist data to JSON - {:?}", e);
 				process::exit(1);
 			}
+		}
+	}
+}
+
+/* NOTE: out_file is unneeded, as there's nothing worth writing to a file */
+// TODO: Warn if outfile is provided, indicating that it'll be ignored
+fn total_duration_mode(in_file: &str, _out_file: Option<&String>)
+{
+	println!("Computing Total Duration:");
+	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
+		/* Compute duration */
+		let result = xspf.total_duration();
+		println!("    Total Duration:  {:?} (mm:ss)", result.duration);
+		println!("    Num Tracks:      {}", xspf.len());
+		// TODO: include an average length estimate?
+		
+		if result.uncounted > 0 {
+			println!("");
+			println!("    Skipped Tracks:  {}", result.uncounted);
+			println!("                     (Tracks may skipped if no duration data was found in the playlist)");
 		}
 	}
 }
@@ -166,7 +190,11 @@ fn main()
 			
 			"json" => {
 				handle_xspf_processing_mode(&args, json_output_mode);
-			}
+			},
+			
+			"runtime" => {
+				handle_xspf_processing_mode(&args, total_duration_mode);
+			},
 			
 			"help" => {
 				print_usage_info();
@@ -175,7 +203,7 @@ fn main()
 			arg => {
 				println!("Unrecognised option: '{0:?}'", arg);
 				print_usage_info();
-			}
+			},
 		}
 	}
 	else {

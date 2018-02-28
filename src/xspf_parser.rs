@@ -16,6 +16,8 @@ use std::str::FromStr;
 use std::path::Path;
 use std::fmt;
 
+use std::ops::{Add, AddAssign};
+
 /* ********************************************** */
 /* Utility Types */
 
@@ -53,6 +55,47 @@ impl TrackDuration {
 	}
 }
 
+
+/* The standard cases */
+impl Add for TrackDuration {
+	type Output = TrackDuration;
+	fn add(self, other: TrackDuration) -> TrackDuration
+	{
+		let TrackDuration(x) = self;
+		let TrackDuration(y) = other;
+		TrackDuration(x + y)
+	}
+}
+impl AddAssign for TrackDuration {
+	fn add_assign(&mut self, other: TrackDuration)
+	{
+		let TrackDuration(x) = *self;
+		let TrackDuration(y) = other;
+		
+		*self = TrackDuration(x + y);
+	}
+}
+
+
+/* The useful cases */
+impl Add<i64> for TrackDuration {
+	type Output = TrackDuration;
+	fn add(self, other: i64) -> TrackDuration
+	{
+		let TrackDuration(old_val) = self;
+		TrackDuration(old_val + other)
+	}
+}
+impl AddAssign<i64> for TrackDuration {
+	fn add_assign(&mut self, other: i64)
+	{
+		let TrackDuration(old_val) = *self;
+		*self = TrackDuration(old_val + other);
+	}
+}
+
+
+/* Display Formatting - We want it to display as a timecode (instead of a plain number in milliseconds) */
 impl fmt::Display for TrackDuration {
 	/* Display timecodes instead of raw ints when printing */
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
@@ -69,7 +112,6 @@ impl fmt::Debug for TrackDuration {
 		write!(f, "{}", self.to_timecode())
 	}
 }
-
 
 /* ------------------------------------------- */
 
@@ -121,16 +163,16 @@ pub enum TrackExtension {
 impl FromStr for TrackExtension {
 	type Err = (&'static str);
 	
-    fn from_str(s: &str) -> Result<TrackExtension, Self::Err> {
-        match s {
-            "mp3"  => Ok(TrackExtension::mp3),
-            "flac" => Ok(TrackExtension::flac),
-            "ogg"  => Ok(TrackExtension::ogg),
-            "m4a"  => Ok(TrackExtension::m4a),
-            "mp4"  => Ok(TrackExtension::mp4),
-            _      => Err("Unknown extension")
-        }
-    }
+	fn from_str(s: &str) -> Result<TrackExtension, Self::Err> {
+		match s {
+			"mp3"  => Ok(TrackExtension::mp3),
+			"flac" => Ok(TrackExtension::flac),
+			"ogg"  => Ok(TrackExtension::ogg),
+			"m4a"  => Ok(TrackExtension::m4a),
+			"mp4"  => Ok(TrackExtension::mp4),
+			_      => Err("Unknown extension")
+		}
+	}
 }
 
 /* ------------------------------------------- */
@@ -172,7 +214,7 @@ impl FilenameInfoComponents {
 		if let Some(vcap) = RE_VIOLIN_LAYERING.captures(filename) {
 			/* return Violin Layering case */
 			let index = vcap["index"].parse::<i32>()
-			                         .unwrap_or_default();
+									 .unwrap_or_default();
 			let name  = vcap["id"].to_string(); // XXX: Prettify
 			
 			FilenameInfoComponents {
@@ -185,7 +227,7 @@ impl FilenameInfoComponents {
 		else if let Some(mcap) = RE_MUSE_SCORE.captures(filename) {
 			/* return MuseScore case */
 			let index = mcap["index"].parse::<i32>()
-			                         .unwrap_or_default();
+									 .unwrap_or_default();
 			let name  = mcap["id"].to_string(); // XX: Prettify
 			
 			FilenameInfoComponents {
@@ -217,16 +259,16 @@ impl FilenameInfoComponents {
 		/* Use Path to split the "name" portion from the extension */
 		let path = Path::new(filename);
 		let name_part: &str = path.file_stem().unwrap()  /* OsString - This should be ok to unwrap like this */
-		                          .to_str().unwrap();    /* &str - Need to unwrap the converted version to get what we need */
+								  .to_str().unwrap();    /* &str - Need to unwrap the converted version to get what we need */
 		
 		/* Generate the stub instance, with all the name-parts filled out */
 		let mut fic = Self::from_file_stem(name_part);
 		
 		/* Extract the extension info */
 		let extn_str = path.extension().unwrap()    /* get OsString */
-		                   .to_str().unwrap();      /* get &str - Need to unwrap the converted version */
+						   .to_str().unwrap();      /* get &str - Need to unwrap the converted version */
 		let extn = extn_str.parse::<TrackExtension>()
-		                   .unwrap();               /* get contents of mandatory Result */
+						   .unwrap();               /* get contents of mandatory Result */
 		
 		/* ... and set extension now */
 		fic.extn = extn;
@@ -241,10 +283,10 @@ impl fmt::Debug for FilenameInfoComponents {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
 		write!(f, r"[{0}]  idx={1}, n='{2}', ext={3:?}",
-		       self.track_type.shortname(),
-		       self.index,
-		       self.name,
-		       self.extn)
+			   self.track_type.shortname(),
+			   self.index,
+			   self.name,
+			   self.extn)
 	}
 }
 
@@ -357,6 +399,14 @@ pub struct XspfPlaylist {
 	pub title : Option<String>
 }
 
+/* Helper for XspfPlaylist.total_duration() */
+#[derive(Debug)]
+pub struct XspfDurationTallyResult {
+	pub duration : TrackDuration,      /* Total duration of tracks in this playlist */
+	pub uncounted : usize              /* Number of tracks that couldn't be counted (i.e. missing durations) */
+}
+
+/* API for XspfPlaylist */
 impl XspfPlaylist {
 	/* Generate & populate playlist, given the root element of the */
 	pub fn from_xml_tree(root: Element, filename: &str) -> XspfPlaylist
@@ -399,6 +449,29 @@ impl XspfPlaylist {
 	pub fn len(&self) -> usize
 	{
 		self.tracks.len()
+	}
+	
+	/* Utility - Total duration of all tracks
+	 * NOTE: This returns both the duration that can be tallied, 
+	 *       along with a count of how many couldn't be counted
+	 */
+	pub fn total_duration(&self) -> XspfDurationTallyResult
+	{
+		let mut result = XspfDurationTallyResult { duration: TrackDuration(0), uncounted: 0 };
+		
+		for track in self.tracks.iter() {
+			match track.duration {
+				Some(ref x) => {
+					let TrackDuration(d) = *x; /* ugh! It was easier destructing than trying to figure out the lifetimes shit */
+					result.duration += d;
+				},
+				None => {
+					result.uncounted += 1;
+				}
+			}
+		}
+		
+		result
 	}
 }
 
