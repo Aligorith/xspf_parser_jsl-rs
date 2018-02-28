@@ -3,12 +3,12 @@
  * This is simply a wrapper around an underlying XML reading library,
  * so that we can just abstract out the bits we want to expose.
  */
-extern crate minidom;
-use self::minidom::Element;
-
 //#[macro_use] extern crate lazy_static;
 extern crate regex;
 use self::regex::Regex;
+
+extern crate minidom;
+use self::minidom::Element;
 
 use std::fs::File;
 use std::io::prelude::*;

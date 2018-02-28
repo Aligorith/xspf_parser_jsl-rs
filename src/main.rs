@@ -1,3 +1,9 @@
+/* Main entrypoint for "xspf_tools" executable AND 
+ * also the implicit crate that it and all its stuff lives in
+ */
+
+/* macro_use defines need to happen in the crate root - https://stackoverflow.com/a/39175997/6531515 */
+#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate indoc;
 #[macro_use] mod logic_macros;
 
