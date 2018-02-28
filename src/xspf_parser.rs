@@ -164,39 +164,51 @@ impl FilenameInfoComponents {
 			static ref RE_MUSE_SCORE : Regex      = Regex::new(r"^(?P<date>\d{8})(?P<variant>[[:alpha:]]?)-(?P<index>\d+)-(?P<id>.+)$").unwrap();
 		}
 		
-		/* Define placeholder values */
-		let mut track_type = TrackType::UnknownType;
-		let mut index = 1;
-		let mut name = filename.to_string(); //String::new();
-		
 		/* Try each of the regex'es to find a match */
-		if RE_VIOLIN_LAYERING.is_match(filename) {
-			track_type = TrackType::ViolinLayering;
-			// TODO: extract values out of captures
-			println!("track type = VL - {:?}", track_type);
+		if let Some(vcap) = RE_VIOLIN_LAYERING.captures(filename) {
+			/* return Violin Layering case */
+			let index = vcap["index"].parse::<i32>()
+			                         .unwrap_or_default();
+			let name  = vcap["id"].to_string(); // XXX: Prettify
+			
+			FilenameInfoComponents {
+				track_type : TrackType::ViolinLayering,
+				index : index,
+				name : name,
+				extn : TrackExtension::Placeholder,
+			}
 		}
-		else if RE_MUSE_SCORE.is_match(filename) {
-			track_type = TrackType::MuseScore;
-			// TODO: extract values out of captures
-			println!("track type = MS");
+		else if let Some(mcap) = RE_MUSE_SCORE.captures(filename) {
+			/* return MuseScore case */
+			let index = mcap["index"].parse::<i32>()
+			                         .unwrap_or_default();
+			let name  = mcap["id"].to_string(); // XX: Prettify
+			
+			FilenameInfoComponents {
+				track_type : TrackType::MuseScore,
+				index : index,
+				name : name,
+				extn : TrackExtension::Placeholder,
+			}
 		}
 		else {
-			println!("track type = unmatched");
-		}
-		
-		
-		/* Return new instance */
-		FilenameInfoComponents {
-			track_type : track_type,
-			index : index,
-			name : name.to_string(),
-			extn : TrackExtension::Placeholder,
+			let track_type = TrackType::UnknownType;
+			let index = 1;
+			let name = filename.to_string(); //String::new();
+			
+			/* Return new instance */
+			FilenameInfoComponents {
+				track_type : track_type,
+				index : index,
+				name : name.to_string(),
+				extn : TrackExtension::Placeholder,
+			}
 		}
 	}
 	
 	
 	/* Constructor from filename */
-	fn new(filename: &str) -> Self
+	pub fn new(filename: &str) -> Self
 	{
 		/* Use Path to split the "name" portion from the extension */
 		let path = Path::new(filename);
