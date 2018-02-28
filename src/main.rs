@@ -43,6 +43,7 @@ fn dump_output_mode(in_file: &str, _out_file: Option<&String>)
 		for (i, track) in xspf.tracks.iter().enumerate() {
 			println!("  {0} | filename = '{1}', date = {2}, duration = {3:?}",
 			         i, track.filename, track.date, track.duration);
+			println!("        Info: {:?}", track.info);
 		}
 	}
 }

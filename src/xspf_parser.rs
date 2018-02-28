@@ -24,21 +24,21 @@ pub struct TrackDuration(i64);
 
 impl TrackDuration {
 	/* Convert from milliseconds to seconds */
-	fn to_secs(&self) -> f64
+	pub fn to_secs(&self) -> f64
 	{
 		let TrackDuration(ms) = *self;
 		(ms as f64) / 1000.0_f64
 	}
 	
 	/* Convert from milliseconds to minutes */
-	fn to_mins(&self) -> f64
+	pub fn to_mins(&self) -> f64
 	{
 		let secs = self.to_secs();
 		secs / 60.0_f64
 	}
 	
 	/* Convert from milliseconds to "mins:secs" timecode string */
-	fn to_timecode(&self) -> String
+	pub fn to_timecode(&self) -> String
 	{
 		/* Total seconds - We don't care about the leftover milliseconds */
 		let total_secs = self.to_secs() as i64;
@@ -74,7 +74,7 @@ impl fmt::Debug for TrackDuration {
 
 /* Track Types */
 #[derive(Debug)]
-enum TrackType {
+pub enum TrackType {
 	Unknown,
 	ViolinLayering,
 	MuseScore,
@@ -82,11 +82,28 @@ enum TrackType {
 	Voice,
 }
 
+impl TrackType {
+	/* Get an abbreviated name for more compact display */
+	fn shortname(&self) -> String
+	{
+		let s = match self {
+					Unknown        => "?",
+					ViolinLayering => "VL",
+					MuseScore      => "MS",
+					Piano          => "P",
+					Voice          => "V",
+				};
+		
+		s.to_string()
+	}
+}
+
 /* ------------------------------------------- */
 
 /* Filename Extension */
 #[allow(non_camel_case_types)]
-enum TrackExtension {
+#[derive(Debug)]
+pub enum TrackExtension {
 	/* Placeholder - Only used when constructing the type */
 	Placeholder,
 	
@@ -121,17 +138,17 @@ impl FromStr for TrackExtension {
 /* Filename Info Components
  * Internal use only, for easier extraction of interesting aspects
  */
-struct FilenameInfoComponents {
+pub struct FilenameInfoComponents {
 	/* Track Type */
-	track_type : TrackType,
+	pub track_type : TrackType,
 	/* Sequence Index in that day's sessions */
-	index : i32,
+	pub index : i32,
 	
 	/* Descriptive name (all underscores/symbols get normalised out) */
-	name: String,
+	pub name: String,
 	
 	/* filename extension */
-	extn : TrackExtension
+	pub extn : TrackExtension
 }
 
 impl FilenameInfoComponents {
@@ -200,24 +217,37 @@ impl FilenameInfoComponents {
 	}
 }
 
+impl fmt::Debug for FilenameInfoComponents {
+	/* Display key info from FilenameInfoComponents */
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	{
+		write!(f, r"[{0}]  idx={1}, n='{2}', ext={3:?}",
+		       self.track_type.shortname(),
+		       self.index,
+		       self.name,
+		       self.extn)
+	}
+}
+
 /* ********************************************** */
 /* Playlist Types */
 
 /* A track listing in the playlist */
 #[derive(Debug)]
 pub struct Track {
-	/* Descriptive name assigned to this track */
-	pub name: String,
-	/* Duration (in ms) of the track - as stored in the file */
-	pub duration: Option<TrackDuration>,
+	/* Full path (extracted from the file) */
+	pub path: String,
 	
 	/* Full name of the track itself (v<num>_<name>.<mp3/flac>) */
 	pub filename: String,
 	/* Date string of the track (i.e. parent directory) */
 	pub date: String,
 	
-	/* Full path (extracted from the file) */
-	pub path: String,
+	/* Duration (in ms) of the track - as stored in the file */
+	pub duration: Option<TrackDuration>,
+	
+	/* FileInfo */
+	pub info : FilenameInfoComponents
 }
 
 const FILE_URI_PREFIX: &'static str = "file:///";
@@ -238,16 +268,13 @@ impl Track {
 		let filename = path_elems.pop().unwrap().to_string();
 		let date = path_elems.pop().unwrap().to_string();
 		
-		let name_info = FilenameInfoComponents::new(filename.as_ref());
-		
-		
 		/* Construct and return a track */
 		Ok(Track {
-			name: name_info.name,
-			duration: None,  /* Currently unknown */
+			path: fullpath.clone(),
 			filename: filename.clone(),
 			date: date.clone(),
-			path: fullpath.clone()
+			duration: None,  /* Currently unknown */
+			info: FilenameInfoComponents::new(filename.as_ref()),
 		})
 	}
 	
