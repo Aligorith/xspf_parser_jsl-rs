@@ -20,27 +20,17 @@ use std::fmt;
 /* Utility Types */
 
 /* Track Duration */
-type TrackDuration = i64;
+pub struct TrackDuration(i64);
 
-trait MillisecondTimeCode {
+impl TrackDuration {
 	/* Convert from milliseconds to seconds */
-	fn to_secs(&self) -> f64;
-	
-	/* Convert from milliseconds to minutes */
-	fn to_mins(&self) -> f64;
-	
-	/* Convert from milliseconds to "mins:secs" timecode string */
-	fn to_timecode(&self) -> String;
-}
-
-impl MillisecondTimeCode for TrackDuration {
-	/* Convert seconds */
 	fn to_secs(&self) -> f64
 	{
-		(*self as f64) / 1000.0_f64
+		let TrackDuration(ms) = *self;
+		(ms as f64) / 1000.0_f64
 	}
 	
-	/* Convert to minutes */
+	/* Convert from milliseconds to minutes */
 	fn to_mins(&self) -> f64
 	{
 		let secs = self.to_secs();
@@ -58,11 +48,20 @@ impl MillisecondTimeCode for TrackDuration {
 		let secs: i64 = total_secs % 60;
 		
 		/* output string */
-		format!("{}:{}", mins, secs)
+		format!("{0:02}:{1:02}", mins, secs)
 	}
 }
 
 impl fmt::Display for TrackDuration {
+	/* Display timecodes instead of raw ints when printing */
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	{
+		write!(f, "{}", self.to_timecode())
+	}
+}
+
+/* XXX: how to deduplicate? */
+impl fmt::Debug for TrackDuration {
 	/* Display timecodes instead of raw ints when printing */
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
@@ -281,7 +280,7 @@ impl Track {
 					if e_duration.is_some() {
 						let duration_str = e_duration.unwrap().text();
 						if let Ok(duration) = duration_str.parse::<i64>() {
-							t.duration = Some(duration);
+							t.duration = Some(TrackDuration(duration));
 						}
 					}
 					
