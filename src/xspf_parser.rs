@@ -353,7 +353,7 @@ pub struct XspfPlaylist {
 
 impl XspfPlaylist {
 	/* Generate & populate playlist, given the root element of the */
-	pub fn from_xml_tree(root: Element) -> XspfPlaylist
+	pub fn from_xml_tree(root: Element, filename: &str) -> XspfPlaylist
 	{
 		let mut tracklist : Vec<Track> = Vec::new();
 		let mut title = None;
@@ -362,7 +362,8 @@ impl XspfPlaylist {
 		for e_section in root.children() {
 			match e_section.name().as_ref() {
 				"title" => {
-					title = Some(e_section.text());
+					let title_text = format!("{0} - {1}", e_section.text(), filename);
+					title = Some(title_text.to_string());
 				},
 				
 				"trackList" => {
@@ -429,7 +430,7 @@ pub fn parse_xspf(filename: &str) -> Option<XspfPlaylist>
 	let root: Element = xml_file.parse().unwrap();
 	
 	/* 3) Create and return new playlist object from the DOM */
-	let playlist = XspfPlaylist::from_xml_tree(root);
+	let playlist = XspfPlaylist::from_xml_tree(root, filename);
 	Some(playlist)
 }
 
