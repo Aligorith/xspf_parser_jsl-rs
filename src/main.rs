@@ -187,9 +187,11 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 									};
 			
 			/* Loop over tracks copying them to the folder */
+			let mut dest_filenames : Vec<String> = Vec::new();
+			
 			for (track_idx, track) in xspf.tracks.iter().enumerate() {
 				/* Construct filename for copied file - it needs to have enough metadata to figure out what's going on */
-				let dst_filename = format!("Track{track_idx:0tixw$}-{date}-{tt}{index:02}_{name}.{ext:?}",
+				let dst_filename = format!("Track_{track_idx:0tixw$}-{date}-{tt}{index:02}_{name}.{ext:?}",
 				                           track_idx=track_idx + 1,
 				                           tixw=track_index_width,
 				                           date=track.date,
@@ -207,6 +209,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 					Ok(_)  => {
 						println!("   Copied {src} => <outdir>/{dst}", 
 						         src=track.filename, dst=dst_filename);
+						dest_filenames.push(dst_filename);
 					},
 					Err(e) => {
 						eprintln!("  ERROR: Couldn't copy {src} => <ourdir>/{dst}!",
@@ -216,6 +219,22 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 						/* XXX: Should we stop instead? We don't have any other way to keep going otherwise! */
 						//process::exit(1);
 					}
+				}
+			}
+			
+			/* Dump list of copied files to <out_path>/<playlist_filename.xspf.manifest> */
+			let manifest_path = Path::new(out).join(format!("{playlist}.manifest", playlist=in_file));
+			println!("\nWriting manifest of copied files to {0:?}", manifest_path);
+			
+			match File::create(&manifest_path) {
+				Ok(mut f) => {
+					for filename in dest_filenames.iter() {
+						writeln!(f, "{}", filename);
+					}
+				},
+				Err(e) => {
+					eprintln!("ERROR: Could not write track manifest to {0:?}", manifest_path);
+					eprintln!("       {:?}", e)
 				}
 			}
 		}
