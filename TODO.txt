@@ -1,5 +1,4 @@
 TODO List:
-* Error handling for file IO
 * Test files for xspf parsing
 * Tests for json export
 * Tests for list output

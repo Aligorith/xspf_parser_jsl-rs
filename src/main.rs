@@ -16,9 +16,10 @@ extern crate serde_json;
 use std::env;
 use std::process;
 
+use std::error::Error;
 use std::fs::{self, File};
-use std::path::Path;
 use std::io::{self, Write};
+use std::path::Path;
 
 mod track_duration;  // XXX: Have this as part of xspf_parser?
 mod track_name_info; // XXX: Have this as part of xspf_parser
@@ -97,8 +98,13 @@ fn list_output_mode(in_file: &str, out_file: Option<&String>)
 		
 		/* Write out the full filepath for each track to separate lines in the output stream */
 		for track in xspf.tracks.iter() {
-			// FIXME: How do we handle the Result<> here?
-			writeln!(out, "{0}", track.path);
+			match writeln!(out, "{0}", track.path) {
+				Err(why) => {
+					eprintln!("ERROR: {}", why.description());
+					break;
+				},
+				_ => { /* continue */}
+			}
 		}
 	}
 }
@@ -117,8 +123,12 @@ fn json_output_mode(in_file: &str, out_file: Option<&String>)
 		match serde_json::to_string_pretty(&xspf) {
 			Ok(j) => {
 				/* Write entire json string to output */
-				// FIXME: How do we handle the Result<> here?
-				writeln!(out, "{}", j);
+				match writeln!(out, "{}", j) {
+					Err(why) => {
+						eprintln!("ERROR: Couldn't write JSON output - {}", why.description());
+					},
+					_ => { /* continue */}
+				}
 			},
 			
 			// FIXME: handle specific cases?
@@ -214,7 +224,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 					Err(e) => {
 						eprintln!("  ERROR: Couldn't copy {src} => <ourdir>/{dst}!",
 						          src=track.filename, dst=dst_filename);
-						eprintln!("  {:?}", e);
+						eprintln!("  Reason: {}", e.description());
 						
 						/* XXX: Should we stop instead? We don't have any other way to keep going otherwise! */
 						//process::exit(1);
@@ -224,17 +234,23 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 			
 			/* Dump list of copied files to <out_path>/<playlist_filename.xspf.manifest> */
 			let manifest_path = Path::new(out).join(format!("{playlist}.manifest", playlist=in_file));
-			println!("\nWriting manifest of copied files to {0:?}", manifest_path);
+			println!("\nWriting manifest of copied files to {0}", manifest_path.display());
 			
 			match File::create(&manifest_path) {
 				Ok(mut f) => {
 					for filename in dest_filenames.iter() {
-						writeln!(f, "{}", filename);
+						match writeln!(f, "{}", filename) {
+							Err(why) => {
+								eprintln!("ERROR: Problem encountered while writing manifest file - {}", why.description());
+								break;
+							}
+							_ => { /* keep going */ }
+						}
 					}
 				},
-				Err(e) => {
+				Err(why) => {
 					eprintln!("ERROR: Could not write track manifest to {0:?}", manifest_path);
-					eprintln!("       {:?}", e)
+					eprintln!("       Reason: {:?}", why.description())
 				}
 			}
 		}
