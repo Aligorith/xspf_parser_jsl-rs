@@ -1,25 +1,25 @@
 xspf_parser_jsl-rs
 ==================
-* Rust-based tool for processing XSPF playlists, extracting metadata embedded in the filenames, and exporting this data into various formats that are easier to use *
+*Rust-based tool for processing XSPF playlists, extracting metadata embedded in the filenames, and exporting this data into various formats that are easier to use*
 
 
 Usage
 -----
 
-$ xspf_tools <mode> <in.xspf> [<outfile/dir>]
+`` $ xspf_tools {mode} {in.xspf} [{outfile/dir}] ``
                   
-where <mode> is one of the following:
-   * **help**      Prints this text
+where {mode} is one of the following:
+   * **help**    -  Prints this text
    
-   * **dump**      Prints summary of the important identifying info gained from the playlist
-   * **runtime**   Prints summary of the total running time of the playlist
+   * **dump**    -   Prints summary of the important identifying info gained from the playlist
+   * **runtime** -   Prints summary of the total running time of the playlist
    
-   * **list**      Writes the file paths of all tracks in the playlist to <outfile>
-   * **json**      Extracts the useful info out of the file, and dumps to JSON format
-                   in <outfile> for easier handling
+   * **list**    -   Writes the file paths of all tracks in the playlist to {outfile}
+   * **json**    -   Extracts the useful info out of the file, and dumps to JSON format
+                      in {outfile} for easier handling
    
-   * **copy**      Copies all the files named in the playlist to the nominated folder <outdir>
-                   Their names will get prefixed with metadata such as the track number and date.
+   * **copy**    -  Copies all the files named in the playlist to the nominated folder {outdir}
+                     Their names will get prefixed with metadata such as the track number and date.
 
 
 What is this - Motivation/Purpose
