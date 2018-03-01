@@ -109,18 +109,47 @@ impl FilenameInfoComponents {
 	 */
 	fn from_file_stem(filename: &str) -> Self
 	{
-		/* Defines for the regex expressions to use - all get initialised on first run, then can be accessed readily later */
+		/* Defines for the regex expressions to use
+		 * - All get initialised on first run, then can be accessed readily later
+		 * - Multi-line expression strings with (?:x) will ignore all whitespace
+		 *   (whcih is useful, as those are the most complex)
+		 */
 		lazy_static! {
 			/* Violin Layering */
-			static ref RE_VIOLIN_LAYERING : Regex = Regex::new(r"^v(?P<index>\d+)(?P<variant>[[:alpha:]]?)-(?P<id>.+)$").unwrap();
+			/* - standard/uniform style */
+			static ref RE_VIOLIN_LAYERING : Regex   = Regex::new(r"^v(?P<index>\d+)(?P<variant>[[:alpha:]]?)-(?P<id>.+)$").unwrap();
+			
+			/* - old style: they start with either "vln_layering_" and "vln_improv_" */
+			static ref RE_VLN_LAYERS_OLD : Regex    = Regex::new(r"(?x)                                     # Ignore whitespace
+			                                                       ^
+			                                                       (?: vln_layering | vln_improv)           # Non-Capturing; The old long-style prefixes
+			                                                       (?: - | _)                               # Non-Capturing; vln_improv uses '_', while everyone else uses '-'
+			                                                       (?P<index>\d+)(?P<variant>[[:alpha:]]?)  # e.g. 02, 03b, etc.
+			                                                       -
+			                                                       (?P<id>.+)
+			                                                       $").unwrap();
+			
 			
 			/* Muse Score */
-			static ref RE_MUSE_SCORE : Regex      = Regex::new(r"^(?P<date>\d{8})(?P<variant>[[:alpha:]]?)-(?P<index>\d+)-(?P<id>.+)$").unwrap();
+			static ref RE_MUSE_SCORE : Regex        = Regex::new(r"^(?P<date>\d{8})(?P<variant>[[:alpha:]]?)-(?P<index>\d+)-(?P<id>.+)$").unwrap();
 		}
 		
 		/* Try each of the regex'es to find a match */
 		if let Some(vcap) = RE_VIOLIN_LAYERING.captures(filename) {
 			/* return Violin Layering case */
+			let index = vcap["index"].parse::<i32>()
+									 .unwrap_or_default();
+			let name  = vcap["id"].to_string(); // XXX: Prettify
+			
+			FilenameInfoComponents {
+				track_type : TrackType::ViolinLayering,
+				index : index,
+				name : name,
+				extn : TrackExtension::Placeholder,
+			}
+		}
+		else if let Some(vcap) = RE_VLN_LAYERS_OLD.captures(filename) {
+			/* return Violin Layering case - old style names */
 			let index = vcap["index"].parse::<i32>()
 									 .unwrap_or_default();
 			let name  = vcap["id"].to_string(); // XXX: Prettify
@@ -297,15 +326,29 @@ mod tests {
 	#[test]
 	fn test_vln_improv()
 	{
-		//"vln_improv_04-mystique.mp3"
+		let v1 = FilenameInfoComponents::new("vln_improv_04-mystique.mp3");
+		assert_eq!(TrackType::ViolinLayering, v1.track_type);
+		assert_eq!(4, v1.index);
+		assert_eq!("mystique", v1.name);
+		assert_eq!(TrackExtension::mp3, v1.extn);
+		
 		//"vln_improv_01.mp3"
 	}
 	
 	#[test]
 	fn test_vln_layering()
 	{
-		//"vln_layering-05-the_last_moose.mp3"
-		//"vln_layering-03-delicate.mp3"
+		let v1 = FilenameInfoComponents::new("vln_layering-05-the_last_moose.mp3");
+		assert_eq!(TrackType::ViolinLayering, v1.track_type);
+		assert_eq!(5, v1.index);
+		assert_eq!("the_last_moose", v1.name);
+		assert_eq!(TrackExtension::mp3, v1.extn);
+		
+		let v2 = FilenameInfoComponents::new("vln_layering-03-delicate.mp3");
+		assert_eq!(TrackType::ViolinLayering, v2.track_type);
+		assert_eq!(3, v2.index);
+		assert_eq!("delicate", v2.name);
+		assert_eq!(TrackExtension::mp3, v2.extn);
 	}
 	
 	/* Check that musescore filenames parse correctly ----------------------------------- */

@@ -4,8 +4,7 @@ TODO List:
 * Tests for json export
 * Tests for list output
 * Tests for file-copy filenames
-* Support for old-style filenames
-* Tests for old-style filename parsing
 * Support for version/variant markers (i.e. prefix/postfix)
+* Support for filenames without an actual name/id
 * Update readme (usage, install, etc.)
 
