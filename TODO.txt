@@ -1,5 +1,11 @@
 TODO List:
-* Tests for regex
-* Split TrackDuration into its own file/module
-* Test files for general case
 * Error handling for file IO
+* Test files for xspf parsing
+* Tests for json export
+* Tests for list output
+* Tests for file-copy filenames
+* Support for old-style filenames
+* Tests for old-style filename parsing
+* Support for version/variant markers (i.e. prefix/postfix)
+* Update readme (usage, install, etc.)
+
