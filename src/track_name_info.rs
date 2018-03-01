@@ -10,9 +10,9 @@ use std::str::FromStr;
 use std::path::Path;
 
 /* *************************************************** */
-
 /* Track Types */
 #[derive(Serialize, Deserialize)]
+#[derive(PartialEq)]
 #[derive(Debug)]
 pub enum TrackType {
 	UnknownType,
@@ -49,11 +49,11 @@ impl TrackType {
 }
 
 /* *************************************************** */
-
 /* Filename Extension */
 #[derive(Serialize, Deserialize)]
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum TrackExtension {
 	/* Placeholder - Only used when constructing the type */
 	Placeholder,
@@ -84,9 +84,10 @@ impl FromStr for TrackExtension {
 }
 
 /* *************************************************** */
-
 /* Filename Info Components
- * Internal use only, for easier extraction of interesting aspects
+ *
+ * Provides a mechanism for extracting of interesting aspects
+ * contained within track filenames
  */
 #[derive(Serialize, Deserialize)]
 pub struct FilenameInfoComponents {
@@ -195,6 +196,97 @@ impl fmt::Debug for FilenameInfoComponents {
 			   self.name,
 			   self.extn)
 	}
+}
+
+/* *************************************************** */
+/* Unit Tests */
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	
+	/* Check that the TrackExtension string->enum parsing works correctly */
+	#[test]
+	fn test_filename_extensions()
+	{
+		assert_eq!(TrackExtension::mp3,   "mp3".parse::<TrackExtension>().unwrap());
+		assert_eq!(TrackExtension::flac,  "flac".parse::<TrackExtension>().unwrap());
+		assert_eq!(TrackExtension::ogg,   "ogg".parse::<TrackExtension>().unwrap());
+		assert_eq!(TrackExtension::m4a,   "m4a".parse::<TrackExtension>().unwrap());
+		assert_eq!(TrackExtension::mp4,   "mp4".parse::<TrackExtension>().unwrap());
+	}
+	
+	/* Check that the TrackType shortname stuff works as expected */
+	#[test]
+	fn test_tracktype_shortname()
+	{
+		assert_eq!("?",   TrackType::UnknownType.shortname());
+		assert_eq!("t",   TrackType::UnknownType.shortname_safe());
+		
+		assert_eq!("VL",  TrackType::ViolinLayering.shortname());
+		assert_eq!("VL",  TrackType::ViolinLayering.shortname_safe());
+		
+		assert_eq!("MS",  TrackType::MuseScore.shortname());
+		assert_eq!("MS",  TrackType::MuseScore.shortname_safe());
+		
+		assert_eq!("P",   TrackType::Piano.shortname());
+		assert_eq!("P",   TrackType::Piano.shortname_safe());
+		
+		assert_eq!("V",   TrackType::Voice.shortname());
+		assert_eq!("V",   TrackType::Voice.shortname_safe());
+	}
+	
+	/* Check that violin-layering filenames parse correctly */
+	#[test]
+	fn test_violin_basic()
+	{
+		let v1 = FilenameInfoComponents::new("v01-tranquil.mp3");
+		assert_eq!(TrackType::ViolinLayering, v1.track_type);
+		assert_eq!(1, v1.index);
+		assert_eq!("tranquil", v1.name);
+		assert_eq!(TrackExtension::mp3, v1.extn);
+		
+		let v2 = FilenameInfoComponents::new("v03-spectral.mp3");
+		assert_eq!(TrackType::ViolinLayering, v2.track_type);
+		assert_eq!(3, v2.index);
+		assert_eq!("spectral", v2.name);
+		assert_eq!(TrackExtension::mp3, v2.extn);
+		
+		//let v3 = FilenameInfoComponents::new()
+	}
+	
+	#[test]
+	fn test_violin_multiword()
+	{
+		let v1 = FilenameInfoComponents::new("v02-winds_of_flutter.mp3");
+		assert_eq!(TrackType::ViolinLayering, v1.track_type);
+		assert_eq!(2, v1.index);
+		assert_eq!("winds_of_flutter", v1.name);
+		assert_eq!(TrackExtension::mp3, v1.extn);
+	}
+	
+	#[test]
+	fn test_violin_mutliversion()
+	{
+		
+	}
+	
+	/* Older-Style Violin-Layering names (circa 2016)*/
+	#[test]
+	fn test_vln_improv()
+	{
+		//"vln_improv_04-mystique.mp3"
+		//"vln_improv_01.mp3"
+	}
+	
+	#[test]
+	fn test_vln_layering()
+	{
+		//"vln_layering-05-the_last_moose.mp3"
+		//"vln_layering-03-delicate.mp3"
+	}
+	
+	/* Check that musescore filenames parse correctly */
 }
 
 /* *************************************************** */
