@@ -116,17 +116,14 @@ impl FilenameInfoComponents {
 		 */
 		lazy_static! {
 			/* Violin Layering */
-			/* - standard/uniform style */
-			static ref RE_VIOLIN_LAYERING : Regex   = Regex::new(r"^v(?P<index>\d+)(?P<variant>[[:alpha:]]?)-(?P<id>.+)$").unwrap();
-			
-			/* - old style: they start with either "vln_layering_" and "vln_improv_" */
-			static ref RE_VLN_LAYERS_OLD : Regex    = Regex::new(r"(?x)                                     # Ignore whitespace
+			static ref RE_VIOLIN_LAYERING : Regex   = Regex::new(r"(?x)                                            # Ignore whitespace
 			                                                       ^
-			                                                       (?: vln_layering | vln_improv)           # Non-Capturing; The old long-style prefixes
-			                                                       (?: - | _)                               # Non-Capturing; vln_improv uses '_', while everyone else uses '-'
-			                                                       (?P<index>\d+)(?P<variant>[[:alpha:]]?)  # e.g. 02, 03b, etc.
-			                                                       -
-			                                                       (?P<id>.+)
+			                                                       (?: v |                                         # Non-Capturing; Modern style prefix, OR
+			                                                               (?: (?: vln_layering | vln_improv)      # Non-Capturing;   Old long-style prefixes
+			                                                                   (?: - | _) ))                       # Non-Capturing;       vln_improv uses '_', while everyone else uses '-'
+			                                                       (?P<index>\d+)(?P<variant>[[:alpha:]]?)         # e.g. 02, 03b, etc.
+			                                                       
+			                                                       -(?P<id>.+)                                     # id for file - may or may not be present
 			                                                       $").unwrap();
 			
 			
@@ -137,19 +134,6 @@ impl FilenameInfoComponents {
 		/* Try each of the regex'es to find a match */
 		if let Some(vcap) = RE_VIOLIN_LAYERING.captures(filename) {
 			/* return Violin Layering case */
-			let index = vcap["index"].parse::<i32>()
-									 .unwrap_or_default();
-			let name  = vcap["id"].to_string(); // XXX: Prettify
-			
-			FilenameInfoComponents {
-				track_type : TrackType::ViolinLayering,
-				index : index,
-				name : name,
-				extn : TrackExtension::Placeholder,
-			}
-		}
-		else if let Some(vcap) = RE_VLN_LAYERS_OLD.captures(filename) {
-			/* return Violin Layering case - old style names */
 			let index = vcap["index"].parse::<i32>()
 									 .unwrap_or_default();
 			let name  = vcap["id"].to_string(); // XXX: Prettify
