@@ -20,7 +20,9 @@ use std::fs::{self, File};
 use std::path::Path;
 use std::io::{self, Write};
 
-mod track_duration; // XXX: Have this as part of xspf_parser?
+mod track_duration;  // XXX: Have this as part of xspf_parser?
+mod track_name_info; // XXX: Have this as part of xspf_parser
+
 mod xspf_parser;
 
 /* ********************************************* */
