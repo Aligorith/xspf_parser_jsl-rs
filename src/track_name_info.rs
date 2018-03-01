@@ -205,6 +205,8 @@ impl fmt::Debug for FilenameInfoComponents {
 mod tests {
 	use super::*;
 	
+	/* Support Type Tests --------------------------------------------------------------- */
+	
 	/* Check that the TrackExtension string->enum parsing works correctly */
 	#[test]
 	fn test_filename_extensions()
@@ -236,7 +238,9 @@ mod tests {
 		assert_eq!("V",   TrackType::Voice.shortname_safe());
 	}
 	
-	/* Check that violin-layering filenames parse correctly */
+	/* Check that violin-layering filenames parse correctly ----------------------------- */
+	
+	/* Check that simple violin-layering filenames parse correctly */
 	#[test]
 	fn test_violin_basic()
 	{
@@ -246,15 +250,20 @@ mod tests {
 		assert_eq!("tranquil", v1.name);
 		assert_eq!(TrackExtension::mp3, v1.extn);
 		
-		let v2 = FilenameInfoComponents::new("v03-spectral.mp3");
+		let v2 = FilenameInfoComponents::new("v02-celestial.mp3");
 		assert_eq!(TrackType::ViolinLayering, v2.track_type);
-		assert_eq!(3, v2.index);
-		assert_eq!("spectral", v2.name);
+		assert_eq!(2, v2.index);
+		assert_eq!("celestial", v2.name);
 		assert_eq!(TrackExtension::mp3, v2.extn);
 		
-		//let v3 = FilenameInfoComponents::new()
+		let v3 = FilenameInfoComponents::new("v03-spectral.mp3");
+		assert_eq!(TrackType::ViolinLayering, v3.track_type);
+		assert_eq!(3, v3.index);
+		assert_eq!("spectral", v3.name);
+		assert_eq!(TrackExtension::mp3, v3.extn);
 	}
 	
+	/* Check that multiword violin layering filenames parse correctly */
 	#[test]
 	fn test_violin_multiword()
 	{
@@ -265,10 +274,23 @@ mod tests {
 		assert_eq!(TrackExtension::mp3, v1.extn);
 	}
 	
+	/* Check that multiversion violin layering filenames parse correctly */
 	#[test]
-	fn test_violin_mutliversion()
+	fn test_violin_multiversion()
 	{
+		let v1 = FilenameInfoComponents::new("v01a-outcrop.mp3");
+		assert_eq!(TrackType::ViolinLayering, v1.track_type);
+		assert_eq!(1, v1.index);
+		// XXX: Variant numbers are not currently extracted and stored
+		assert_eq!("outcrop", v1.name);
+		assert_eq!(TrackExtension::mp3, v1.extn);
 		
+		let v2 = FilenameInfoComponents::new("v05L-wild_west.mp3");
+		assert_eq!(TrackType::ViolinLayering, v2.track_type);
+		assert_eq!(5, v2.index);
+		// XXX: Variant numbers are not currently extracted and stored
+		assert_eq!("wild_west", v2.name);
+		assert_eq!(TrackExtension::mp3, v2.extn);
 	}
 	
 	/* Older-Style Violin-Layering names (circa 2016)*/
@@ -286,7 +308,37 @@ mod tests {
 		//"vln_layering-03-delicate.mp3"
 	}
 	
-	/* Check that musescore filenames parse correctly */
+	/* Check that musescore filenames parse correctly ----------------------------------- */
+	
+	#[test]
+	fn test_ms_basic()
+	{
+		
+	}
+	
+	#[test]
+	fn test_ms_multiword()
+	{
+		let m1 = FilenameInfoComponents::new("20170802-02-TouchedByAnAngel.flac");
+		assert_eq!(TrackType::MuseScore, m1.track_type);
+		assert_eq!(2, m1.index);
+		assert_eq!("TouchedByAnAngel", m1.name);
+		assert_eq!(TrackExtension::flac, m1.extn);
+		
+		let m2 = FilenameInfoComponents::new("20170815-05-CanadianBeauty.flac");
+		assert_eq!(TrackType::MuseScore, m2.track_type);
+		assert_eq!(5, m2.index);
+		assert_eq!("CanadianBeauty", m2.name);
+		assert_eq!(TrackExtension::flac, m2.extn);
+	}
+	
+	#[test]
+	fn test_ms_multiversion_postfix()
+	{
+		/* Names where the version is included in a postfix after the name */
+		//"20170821-03-MajesticSerenade-v2.flac"
+		//"20170801-01-Patterns-WIP"
+	}
 }
 
 /* *************************************************** */
