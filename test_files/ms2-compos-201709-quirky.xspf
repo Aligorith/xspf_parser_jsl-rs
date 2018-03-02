@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist xmlns="http://xspf.org/ns/0/" xmlns:vlc="http://www.videolan.org/vlc/playlist/ns/0/" version="1">
+	<title>Playlist</title>
+	<trackList>
+		<track>
+			<location>file:///C:/Users/Joshua/Documents/MuseScore2/Scores/20170928/20170928-03-ExoticJunglePattern.flac</location>
+			<duration>16753</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>0</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///C:/Users/Joshua/Documents/MuseScore2/Scores/20171005/20171005-02-Telegraph.flac</location>
+			<duration>21095</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>1</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///C:/Users/Joshua/Documents/MuseScore2/Scores/20171005/20171005-02-Telegraph.flac</location>
+			<duration>21095</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>2</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///C:/Users/Joshua/Documents/MuseScore2/Scores/20170918/20170918-01a-TN_Pattern-Extended.flac</location>
+			<duration>34504</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>3</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///C:/Users/Joshua/Documents/MuseScore2/Scores/20170901/20170901-02-Jazzy.flac</location>
+			<duration>44965</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>4</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///C:/Users/Joshua/Documents/MuseScore2/Scores/20170903/20170903-01-VlnPizzMelody.flac</location>
+			<duration>29082</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>5</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///C:/Users/Joshua/Documents/MuseScore2/Scores/20170901/20170901-01-Meditation.flac</location>
+			<duration>58502</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>6</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>file:///C:/Users/Joshua/Documents/MuseScore2/Scores/20170918/20170918-01-TN_Pattern.flac</location>
+			<duration>26505</duration>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+				<vlc:id>7</vlc:id>
+			</extension>
+		</track>
+	</trackList>
+	<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:item tid="0"/>
+			<vlc:item tid="1"/>
+			<vlc:item tid="2"/>
+			<vlc:item tid="3"/>
+			<vlc:item tid="4"/>
+			<vlc:item tid="5"/>
+			<vlc:item tid="6"/>
+			<vlc:item tid="7"/>
+	</extension>
+</playlist>
