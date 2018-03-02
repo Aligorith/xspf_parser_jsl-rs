@@ -1,6 +1,8 @@
 TODO List:
-* Test files for xspf parsing
+* Tests snippets for XSPF parsing
+* Tests for XSPF parsing
 * Tests for json export
 * Tests for list output
 * Tests for file-copy filenames
 * Support for version/variant markers (i.e. prefix/postfix)
+* Support for giving untitled tracks names (based on the playlist title)
