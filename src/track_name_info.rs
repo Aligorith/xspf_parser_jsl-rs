@@ -123,7 +123,10 @@ impl FilenameInfoComponents {
 			                                                                   (?: - | _) ))                       # Non-Capturing;       vln_improv uses '_', while everyone else uses '-'
 			                                                       (?P<index>\d+)(?P<variant>[[:alpha:]]?)         # e.g. 02, 03b, etc.
 			                                                       
-			                                                       -(?P<id>.+)                                     # id for file - may or may not be present
+			                                                       (?: (?:                                         # Optional Non-Capturing Group - Optional as titles may be missing. Usually exists though.
+			                                                                -                                      #     Separator before title
+			                                                                (?P<id>.+)                             #     Track Title - e.g. 'celestial', 'the_last_moose'
+			                                                            )? )                                       # Mark the previous two elements as being part of a single optional group
 			                                                       $").unwrap();
 			
 			
@@ -136,12 +139,18 @@ impl FilenameInfoComponents {
 			/* return Violin Layering case */
 			let index = vcap["index"].parse::<i32>()
 									 .unwrap_or_default();
-			let name  = vcap["id"].to_string(); // XXX: Prettify
+			
+			let name : &str =   if let Some(x) = vcap.name("id") {
+									x.as_str() // XXX: Prettify
+								}
+								else {
+									"<Untitled>"
+								};
 			
 			FilenameInfoComponents {
 				track_type : TrackType::ViolinLayering,
 				index : index,
-				name : name,
+				name : name.to_string(),
 				extn : TrackExtension::Placeholder,
 			}
 		}
@@ -315,8 +324,16 @@ mod tests {
 		assert_eq!(4, v1.index);
 		assert_eq!("mystique", v1.name);
 		assert_eq!(TrackExtension::mp3, v1.extn);
-		
-		//"vln_improv_01.mp3"
+	}
+	
+	#[test]
+	fn test_vln_improv_no_name()
+	{
+		let v1 = FilenameInfoComponents::new("vln_improv_01.mp3");
+		assert_eq!(TrackType::ViolinLayering, v1.track_type);
+		assert_eq!(1, v1.index);
+		assert_eq!("<Untitled>", v1.name);
+		assert_eq!(TrackExtension::mp3, v1.extn);
 	}
 	
 	#[test]

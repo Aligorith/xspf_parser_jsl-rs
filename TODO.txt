@@ -4,4 +4,3 @@ TODO List:
 * Tests for list output
 * Tests for file-copy filenames
 * Support for version/variant markers (i.e. prefix/postfix)
-* Support for filenames without an actual name/id
