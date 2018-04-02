@@ -238,7 +238,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 										Some(n) => n.to_str().unwrap(),
 										None    => in_file
 									};
-			let manifest_path = Path::new(out).join(format!("{playlist}.manifest", playlist=playlist_filename));
+			let manifest_path = Path::new(out).join(format!("{playlist}.m3u", playlist=playlist_filename));
 			println!("\nWriting manifest of copied files to {0}", manifest_path.display());
 			
 			match File::create(&manifest_path) {
