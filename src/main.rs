@@ -233,7 +233,12 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 			}
 			
 			/* Dump list of copied files to <out_path>/<playlist_filename.xspf.manifest> */
-			let manifest_path = Path::new(out).join(format!("{playlist}.manifest", playlist=in_file));
+			let playlist_filestem = Path::new(in_file).file_stem();
+			let playlist_filename = match playlist_filestem {
+										Some(n) => n.to_str().unwrap(),
+										None    => in_file
+									};
+			let manifest_path = Path::new(out).join(format!("{playlist}.manifest", playlist=playlist_filename));
 			println!("\nWriting manifest of copied files to {0}", manifest_path.display());
 			
 			match File::create(&manifest_path) {
