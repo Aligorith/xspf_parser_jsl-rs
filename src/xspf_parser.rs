@@ -49,6 +49,8 @@ impl Track {
 		                   .replace("%28", "(")
 		                   .replace("%29", ")")
 		                   .replace("%2C", ",")
+		                   .replace("%C3%AD", "í")
+		                   .replace("%C3%BA", "ú")
 		                   .replace("%E2%80%9C", "“")
 		                   .replace("%E2%80%9D", "”");
 		

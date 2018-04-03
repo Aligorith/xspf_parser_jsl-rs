@@ -63,6 +63,7 @@ pub enum TrackExtension {
 	ogg,
 	m4a,
 	mp4,
+	mkv,
 }
 
 /* From https://www.reddit.com/r/rust/comments/2vqama/parse_string_as_enum_value/cojzafn/
@@ -78,6 +79,7 @@ impl FromStr for TrackExtension {
 			"ogg"  => Ok(TrackExtension::ogg),
 			"m4a"  => Ok(TrackExtension::m4a),
 			"mp4"  => Ok(TrackExtension::mp4),
+			"mkv"  => Ok(TrackExtension::mkv),
 			_      => Err("Unknown extension")
 		}
 	}
