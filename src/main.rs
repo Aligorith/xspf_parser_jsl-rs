@@ -201,14 +201,24 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 			
 			for (track_idx, track) in xspf.tracks.iter().enumerate() {
 				/* Construct filename for copied file - it needs to have enough metadata to figure out what's going on */
-				let dst_filename = format!("Track_{track_idx:0tixw$}-{date}-{tt}{index:02}_{name}.{ext:?}",
-				                           track_idx=track_idx + 1,
-				                           tixw=track_index_width,
-				                           date=track.date,
-				                           tt=track.info.track_type.shortname_safe(),
-				                           index=track.info.index,
-				                           name=track.info.name,
-				                           ext=track.info.extn);
+				let dst_filename =  if track.info.track_type == track_name_info::TrackType::UnknownType {
+									    /* Just use as-is, since it doesn't follow our rules */
+									    format!("Track_{track_idx:0tixw$}-{fname}",
+									            track_idx=track_idx + 1,
+									            tixw=track_index_width,
+									            fname=track.filename)
+									}
+									else {
+									    /* Reformat the name, using the info we've learned about it */
+									    format!("Track_{track_idx:0tixw$}-{date}-{tt}{index:02}_{name}.{ext:?}",
+									            track_idx=track_idx + 1,
+									            tixw=track_index_width,
+									            date=track.date,
+									            tt=track.info.track_type.shortname_safe(),
+									            index=track.info.index,
+									            name=track.info.name,
+									            ext=track.info.extn)
+									};
 				
 				/* Construct paths to actually perform the copying to/from */
 				let src_path = &track.path;
