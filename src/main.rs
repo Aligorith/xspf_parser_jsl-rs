@@ -232,7 +232,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 						dest_filenames.push(dst_filename);
 					},
 					Err(e) => {
-						eprintln!("  ERROR: Couldn't copy {src} => <ourdir>/{dst}!",
+						eprintln!("! ERROR: Couldn't copy {src} => <ourdir>/{dst}!",
 						          src=track.filename, dst=dst_filename);
 						eprintln!("  Reason: {}", e.description());
 						

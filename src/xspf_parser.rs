@@ -41,6 +41,7 @@ impl Track {
 	pub fn from_filepath(path: &str) -> Result<Track, &'static str>
 	{
 		/* full "unmodfied" path (with the symbols replaced, so that we can find the files) */
+		// TODO: Replace these hardcoded cases for something based on an encoding library (e.g. encoding_rs)
 		let fullpath = path.to_string()
 		                   .replace("%20", " ")
 		                   .replace("%21", "!")
@@ -48,11 +49,17 @@ impl Track {
 		                   .replace("%27", "'")
 		                   .replace("%28", "(")
 		                   .replace("%29", ")")
+		                   .replace("%5B", "[")
+		                   .replace("%5D", "]")
 		                   .replace("%2C", ",")
+		                   .replace("%C3%A8", "è")
+		                   .replace("%C3%A9", "é")
 		                   .replace("%C3%AD", "í")
 		                   .replace("%C3%BA", "ú")
 		                   .replace("%E2%80%9C", "“")
-		                   .replace("%E2%80%9D", "”");
+		                   .replace("%E2%80%9D", "”")
+		                   .replace("%E2%80%99", "’")
+		                   ;
 		
 		/* extra filename and date from the last parts of the path 
 		 * WARNING: We're extracting these in reverse order! So first filename, then date!
