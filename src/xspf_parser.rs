@@ -44,7 +44,13 @@ impl Track {
 		let fullpath = path.to_string()
 		                   .replace("%20", " ")
 		                   .replace("%21", "!")
-		                   .replace("%29", "_");
+		                   .replace("%26", "&")
+		                   .replace("%27", "'")
+		                   .replace("%28", "(")
+		                   .replace("%29", ")")
+		                   .replace("%2C", ",")
+		                   .replace("%E2%80%9C", "“")
+		                   .replace("%E2%80%9D", "”");
 		
 		/* extra filename and date from the last parts of the path 
 		 * WARNING: We're extracting these in reverse order! So first filename, then date!
