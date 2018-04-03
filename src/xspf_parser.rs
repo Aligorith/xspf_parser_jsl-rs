@@ -40,8 +40,11 @@ impl Track {
 	/* Generate a track element from a file path */
 	pub fn from_filepath(path: &str) -> Result<Track, &'static str>
 	{
-		/* full unmodfied path */
-		let fullpath = path.to_string();
+		/* full "unmodfied" path (with the symbols replaced, so that we can find the files) */
+		let fullpath = path.to_string()
+		                   .replace("%20", " ")
+		                   .replace("%21", "!")
+		                   .replace("%29", "_");
 		
 		/* extra filename and date from the last parts of the path 
 		 * WARNING: We're extracting these in reverse order! So first filename, then date!
