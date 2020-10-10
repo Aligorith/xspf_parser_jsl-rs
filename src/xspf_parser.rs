@@ -191,6 +191,19 @@ impl XspfPlaylist {
 		self.tracks.len()
 	}
 	
+	/* Utility - Number of digits required for padding track numbers
+	 * so all filenames will have the same length for the track-number
+	 * prefix.
+	 */
+	pub fn track_index_width(&self) -> usize
+	{
+		match self.len() {
+			0   ..= 99   => 2,
+			100 ..= 999  => 3, /* just in case */
+			_            => 4  /* it's unlikely we need more */
+		}
+	}
+	
 	/* Utility - Total duration of all tracks
 	 * NOTE: This returns both the duration that can be tallied, 
 	 *       along with a count of how many couldn't be counted

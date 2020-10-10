@@ -206,11 +206,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 			}
 			
 			/* Compute track index width - number of digits of padding to display before the number */
-			let track_index_width = match xspf.len() {
-										0   ..= 99   => 2,
-										100 ..= 999  => 3, /* just in case */
-										_            => 4  /* it's unlikely we need more */
-									};
+			let track_index_width = xspf.track_index_width();
 			
 			/* Loop over tracks copying them to the folder */
 			let mut dest_filenames : Vec<String> = Vec::new();
