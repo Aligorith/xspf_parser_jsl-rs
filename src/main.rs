@@ -31,7 +31,7 @@ mod xspf_parser;
 fn print_usage_info()
 {
 	let s = indoc!(
-                  "Usage:  xspf_tools <mode> <in.xspf> [<outfile/dir>]
+                  "Usage:  xspf_tools <mode> <in.xspf> [<outfile/dir>] [...command-args...]
                   
                         where <mode> is one of the following:
                            * help      Prints this text
@@ -51,7 +51,22 @@ fn print_usage_info()
 
 /* ********************************************* */
 
-type XspfProcessingModeFunc = fn(in_file: &str, out_file: Option<&String>);
+/* Type wrapper for these functions
+ * Note: This is used instead of a simple type-def as there may be a variable number of arguments required.
+ *
+ *       Doing it this way means that functions that don't need all the args can be passed ot the same
+ *       basic handler function.
+ */
+enum XspfProcessingModeFunc {
+	/* Only takes an input filename - Output filename is not used / causes an error if defined */
+	InOnly(fn(in_file: &str)),
+	
+	/* Default mode that only takes Input (in_file) and Optional Output (out_file) paths */
+	InOut(fn(in_file: &str, out_file: Option<&String>)),
+	
+	/* InOut with additional arguments - a string vector is allowed in this case */
+	InOutWithArgs(fn(in_file: &str, out_file: Option<&String>, args: &Vec<String>)),
+}
 
 /* --------------------------------------------- */
 
@@ -74,8 +89,7 @@ fn get_output_stream(out_file: Option<&String>) -> Box<dyn Write>
 /* --------------------------------------------- */
 
 /* Debug mode showing summary of most salient information about the contents of the playlist */
-/* NOTE: "out_file" is unused/unneeded, hence the underscore */
-fn dump_output_mode(in_file: &str, _out_file: Option<&String>)
+fn dump_output_mode(in_file: &str)
 {
 	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
 		println!("{0} Tracks:", xspf.len());
@@ -142,9 +156,7 @@ fn json_output_mode(in_file: &str, out_file: Option<&String>)
 
 
 /* Compute and display summary of total playing time of playlist */
-/* NOTE: out_file is unneeded, as there's nothing worth writing to a file */
-// TODO: Warn if outfile is provided, indicating that it'll be ignored
-fn total_duration_mode(in_file: &str, _out_file: Option<&String>)
+fn total_duration_mode(in_file: &str)
 {
 	println!("Total Duration Summary:");
 	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
@@ -281,16 +293,43 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 
 fn handle_xspf_processing_mode(args: &Vec<String>, processing_func: XspfProcessingModeFunc)
 {
-	let in_file = args.get(2);
-	let out_file = args.get(3);
+	let in_file_option = args.get(2);
+	let out_file_option = args.get(3);
 	
-	match in_file {
-		Some(f) => {
-			if f.ends_with(".xspf") == false {
+	match in_file_option {
+		Some(in_file) => {
+			if in_file.ends_with(".xspf") == false {
 				println!("WARNING: Input file should have the '.xspf' extension");
 			}
 			
-			processing_func(f, out_file);
+			match processing_func {
+				XspfProcessingModeFunc::InOnly(func) => {
+					/* Input File Only. Warn if out_file is provided */
+					if let Some(out_file) = out_file_option {
+						eprintln!("Warning: 'output_file' argument not required for this function");
+					}
+					func(in_file);
+				},
+				XspfProcessingModeFunc::InOut(func) => {
+					/* Input File + Optional Output File */
+					func(in_file, out_file_option);
+				},
+				XspfProcessingModeFunc::InOutWithArgs(func) => {
+					/* Input File + Optional Output File + Optional args (e.g. "convert" mode) */
+					// TODO: Implement the args vector handling - Needs to be a slice...
+					let command_args_option = args.get(4..);
+					
+					let command_args : Vec<String> =
+						if let Some(command_args_slice) = command_args_option {
+							command_args_slice.to_vec()
+						}
+						else {
+							Vec::new()
+						};
+					
+					func(in_file, out_file_option, &command_args);
+				}
+			}
 		},
 		None => {
 			println!("ERROR: You need to supply a .xspf filename as the second argument\n");
@@ -316,23 +355,23 @@ fn main()
 		 */
 		match mode.as_ref() {
 			"dump" => {
-				handle_xspf_processing_mode(&args, dump_output_mode);
+				handle_xspf_processing_mode(&args, XspfProcessingModeFunc::InOnly(dump_output_mode));
 			},
 			
 			"list" => {
-				handle_xspf_processing_mode(&args, list_output_mode);
+				handle_xspf_processing_mode(&args, XspfProcessingModeFunc::InOut(list_output_mode));
 			},
 			
 			"json" => {
-				handle_xspf_processing_mode(&args, json_output_mode);
+				handle_xspf_processing_mode(&args, XspfProcessingModeFunc::InOut(json_output_mode));
 			},
 			
 			"runtime" => {
-				handle_xspf_processing_mode(&args, total_duration_mode);
+				handle_xspf_processing_mode(&args, XspfProcessingModeFunc::InOnly(total_duration_mode));
 			},
 			
 			"copy" => {
-				handle_xspf_processing_mode(&args, copy_files_mode);
+				handle_xspf_processing_mode(&args, XspfProcessingModeFunc::InOut(copy_files_mode));
 			},
 			
 			"help" => {
