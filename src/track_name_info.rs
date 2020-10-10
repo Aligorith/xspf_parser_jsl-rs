@@ -78,7 +78,8 @@ impl FromStr for TrackExtension {
 	type Err = &'static str;
 	
 	fn from_str(s: &str) -> Result<TrackExtension, Self::Err> {
-		match s {
+		/* Note: We normalise the names here so that the matching can work in a case insensitive way */
+		match s.to_lowercase().as_ref() {
 			"mp3"  => Ok(TrackExtension::mp3),
 			"flac" => Ok(TrackExtension::flac),
 			"ogg"  => Ok(TrackExtension::ogg),
@@ -249,12 +250,23 @@ mod tests {
 		assert_eq!(TrackExtension::mp4,   "mp4".parse::<TrackExtension>().unwrap());
 	}
 	
+	/* Check that the TrackExtension string->enum parsing is case insensitive */
+	#[test]
+	fn test_case_insensitive_filename_extension_parsing()
+	{
+		assert_eq!(TrackExtension::mp3,   "MP3".parse::<TrackExtension>().unwrap());
+		assert_eq!(TrackExtension::m4a,   "M4A".parse::<TrackExtension>().unwrap());
+	}
+	
+	/* Check that the TrackExtension string->enum parsing works correctly for "uknown" or irregular types */
 	#[test]
 	fn test_unknown_filename_extensions()
 	{
+		/* Unknown Extensions */
+		assert_eq!(TrackExtension::Unknown("aac".to_string()),       "aac".parse::<TrackExtension>().unwrap());
 		assert_eq!(TrackExtension::Unknown("apple_pie".to_string()), "apple_pie".parse::<TrackExtension>().unwrap());
 		
-		// For the dummy "Err" case that Result<T, E> must have for the FromStr trait
+		/* For the dummy "Err" case that Result<T, E> must have for the FromStr trait */
 		assert_eq!(Err("No Extension?"),                             "".parse::<TrackExtension>());
 	}
 	
