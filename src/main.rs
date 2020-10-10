@@ -244,7 +244,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 		println!("Copy Files infile='{0}', outdir={1:?}", in_file, out_path);
 		if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
 			/* Ensure outdir exists */
-			let dst_path_root = ensure_output_directory_exists(out);
+			let _dst_path_root = ensure_output_directory_exists(out);
 			
 			/* Compute track index width - number of digits of padding to display before the number */
 			let track_index_width = xspf.track_index_width();
@@ -325,7 +325,8 @@ fn handle_xspf_processing_mode(args: &Vec<String>, processing_func: XspfProcessi
 				XspfProcessingModeFunc::InOnly(func) => {
 					/* Input File Only. Warn if out_file is provided */
 					if let Some(out_file) = out_file_option {
-						eprintln!("Warning: 'output_file' argument not required for this function");
+						eprintln!("Warning: 'output_file' argument ({out}) not required for this function",
+						          out=out_file);
 					}
 					func(in_file);
 				},
