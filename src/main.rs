@@ -16,7 +16,7 @@ extern crate serde_json;
 use std::env;
 use std::process;
 
-use std::error::Error;
+//use std::error::Error;
 use std::fs::{self, File};
 use std::io::{self, Write};
 use std::path::Path;
@@ -191,8 +191,8 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 			
 			/* Compute track index width - number of digits of padding to display before the number */
 			let track_index_width = match xspf.len() {
-										0   ... 99   => 2,
-										100 ... 999  => 3, /* just in case */
+										0   ..= 99   => 2,
+										100 ..= 999  => 3, /* just in case */
 										_            => 4  /* it's unlikely we need more */
 									};
 			
