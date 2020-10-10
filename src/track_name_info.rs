@@ -58,6 +58,11 @@ pub enum TrackExtension {
 	/* Placeholder - Only used when constructing the type */
 	Placeholder,
 	
+	/* Unknown Type - The full extension string is kept, so it can be queried/changed later */
+	Unknown(String),
+	
+	// TODO: Does "no extension" warrant an entry?
+	
 	mp3,
 	flac,
 	ogg,
@@ -70,7 +75,7 @@ pub enum TrackExtension {
  * Usage: string.parse::<TrackExtension>()
  */
 impl FromStr for TrackExtension {
-	type Err = (&'static str);
+	type Err = &'static str;
 	
 	fn from_str(s: &str) -> Result<TrackExtension, Self::Err> {
 		match s {
@@ -80,7 +85,9 @@ impl FromStr for TrackExtension {
 			"m4a"  => Ok(TrackExtension::m4a),
 			"mp4"  => Ok(TrackExtension::mp4),
 			"mkv"  => Ok(TrackExtension::mkv),
-			_      => Err("Unknown extension")
+			
+			""     => Err("No Extension?"), // Does this case ever happen? This dummy case is so that Unknown() can catch everything else
+			_      => Ok(TrackExtension::Unknown(s.to_string())),
 		}
 	}
 }
@@ -240,6 +247,15 @@ mod tests {
 		assert_eq!(TrackExtension::ogg,   "ogg".parse::<TrackExtension>().unwrap());
 		assert_eq!(TrackExtension::m4a,   "m4a".parse::<TrackExtension>().unwrap());
 		assert_eq!(TrackExtension::mp4,   "mp4".parse::<TrackExtension>().unwrap());
+	}
+	
+	#[test]
+	fn test_unknown_filename_extensions()
+	{
+		assert_eq!(TrackExtension::Unknown("apple_pie".to_string()), "apple_pie".parse::<TrackExtension>().unwrap());
+		
+		// For the dummy "Err" case that Result<T, E> must have for the FromStr trait
+		assert_eq!(Err("No Extension?"),                             "".parse::<TrackExtension>());
 	}
 	
 	/* Check that the TrackType shortname stuff works as expected */
