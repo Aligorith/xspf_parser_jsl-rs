@@ -100,7 +100,7 @@ fn list_output_mode(in_file: &str, out_file: Option<&String>)
 		for track in xspf.tracks.iter() {
 			match writeln!(out, "{0}", track.path) {
 				Err(why) => {
-					eprintln!("ERROR: {}", why.description());
+					eprintln!("ERROR: {}", why);
 					break;
 				},
 				_ => { /* continue */}
@@ -125,7 +125,7 @@ fn json_output_mode(in_file: &str, out_file: Option<&String>)
 				/* Write entire json string to output */
 				match writeln!(out, "{}", j) {
 					Err(why) => {
-						eprintln!("ERROR: Couldn't write JSON output - {}", why.description());
+						eprintln!("ERROR: Couldn't write JSON output - {}", why);
 					},
 					_ => { /* continue */}
 				}
@@ -234,7 +234,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 					Err(e) => {
 						eprintln!("! ERROR: Couldn't copy {src} => <ourdir>/{dst}!",
 						          src=track.filename, dst=dst_filename);
-						eprintln!("  Reason: {}", e.description());
+						eprintln!("  Reason: {}", e);
 						
 						/* XXX: Should we stop instead? We don't have any other way to keep going otherwise! */
 						//process::exit(1);
@@ -256,7 +256,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 					for filename in dest_filenames.iter() {
 						match writeln!(f, "{}", filename) {
 							Err(why) => {
-								eprintln!("ERROR: Problem encountered while writing manifest file - {}", why.description());
+								eprintln!("ERROR: Problem encountered while writing manifest file - {}", why);
 								break;
 							}
 							_ => { /* keep going */ }
@@ -265,7 +265,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 				},
 				Err(why) => {
 					eprintln!("ERROR: Could not write track manifest to {0:?}", manifest_path);
-					eprintln!("       Reason: {:?}", why.description())
+					eprintln!("       Reason: {:?}", why)
 				}
 			}
 		}
