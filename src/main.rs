@@ -57,15 +57,15 @@ type XspfProcessingModeFunc = fn(in_file: &str, out_file: Option<&String>);
 
 /* Handle the "out_file" parameter to determine if we're writing to stdout or a named file */
 // FIXME: Handle errors with not being able to open the file
-fn get_output_stream(out_file: Option<&String>) -> Box<Write>
+fn get_output_stream(out_file: Option<&String>) -> Box<dyn Write>
 {
 	let out_writer = match out_file {
 		Some(x) => {
 			let path = Path::new(x);
-			Box::new(File::create(&path).unwrap()) as Box<Write>
+			Box::new(File::create(&path).unwrap()) as Box<dyn Write>
 		},
 		None => {
-			Box::new(io::stdout()) as Box<Write>
+			Box::new(io::stdout()) as Box<dyn Write>
 		},
 	};
 	out_writer
@@ -94,7 +94,7 @@ fn list_output_mode(in_file: &str, out_file: Option<&String>)
 	println!("List in='{0}', out={1:?}", in_file, out_file);
 	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
 		/* Get output stream to write to */
-		let mut out : Box<Write> = get_output_stream(out_file);
+		let mut out : Box<dyn Write> = get_output_stream(out_file);
 		
 		/* Write out the full filepath for each track to separate lines in the output stream */
 		for track in xspf.tracks.iter() {
@@ -116,7 +116,7 @@ fn json_output_mode(in_file: &str, out_file: Option<&String>)
 	println!("JSON in='{0}', out={1:?}", in_file, out_file);
 	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
 		/* Get output stream to write to */
-		let mut out : Box<Write> = get_output_stream(out_file);
+		let mut out : Box<dyn Write> = get_output_stream(out_file);
 		
 		/* Serialise XSPF to a JSON string */
 		// FIXME: Warn when we cannot serialise
