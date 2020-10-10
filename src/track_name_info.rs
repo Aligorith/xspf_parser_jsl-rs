@@ -114,7 +114,7 @@ impl FilenameInfoComponents {
 		/* Defines for the regex expressions to use
 		 * - All get initialised on first run, then can be accessed readily later
 		 * - Multi-line expression strings with (?:x) will ignore all whitespace
-		 *   (whcih is useful, as those are the most complex)
+		 *   (which is useful, as those are the most complex)
 		 */
 		lazy_static! {
 			/* Violin Layering */
