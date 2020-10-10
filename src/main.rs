@@ -90,6 +90,33 @@ fn get_output_stream(out_file: Option<&String>) -> Box<dyn Write>
 	out_writer
 }
 
+/* Ensure output directory exists
+ * ! This function will terminate the process if the directory couldn't be created,
+ *   or some other error occurs that prevents it doing its job.
+ * > Returns the path object representing the root directory that was just created
+ */
+fn ensure_output_directory_exists(out_dir: &str) -> &Path
+{
+	let dst_path_root = Path::new(out_dir);
+	if !dst_path_root.exists() {
+		match fs::create_dir(dst_path_root) {
+			Ok(_) => {
+				println!("   Created new destination folder - {0:?}\n",
+				         dst_path_root.canonicalize().unwrap());  // XXX: how could this go wrong?
+			}
+			Err(e) => {
+				eprintln!("   Could not create destination folder - {0:?}",
+				          dst_path_root.canonicalize().unwrap()); // XXX: how could this go wrong?
+				eprintln!("   {:?}", e);
+				
+				/* There's no way we can recover from this */
+				process::exit(1);
+			}
+		}
+	}
+	dst_path_root
+}
+
 /* --------------------------------------------- */
 
 /* Debug mode showing summary of most salient information about the contents of the playlist */
@@ -187,23 +214,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 		println!("Copy Files infile='{0}', outdir={1:?}", in_file, out_path);
 		if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
 			/* Ensure outdir exists */
-			let dst_path_root = Path::new(out);
-			if !dst_path_root.exists() {
-				match fs::create_dir(dst_path_root) {
-					Ok(_) => {
-						println!("   Created new destination folder - {0:?}\n",
-						         dst_path_root.canonicalize().unwrap());  // XXX: how could this go wrong?
-					}
-					Err(e) => {
-						eprintln!("   Could not create destination folder - {0:?}",
-						          dst_path_root.canonicalize().unwrap()); // XXX: how could this go wrong?
-						eprintln!("   {:?}", e);
-						
-						/* There's no way we can recover from this */
-						process::exit(1);
-					}
-				}
-			}
+			let dst_path_root = ensure_output_directory_exists(out);
 			
 			/* Compute track index width - number of digits of padding to display before the number */
 			let track_index_width = xspf.track_index_width();
