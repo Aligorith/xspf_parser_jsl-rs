@@ -117,6 +117,36 @@ fn ensure_output_directory_exists(out_dir: &str) -> &Path
 	dst_path_root
 }
 
+/* Write manifest of the set of files copied to <out_path>/<playlist_filename>.m3u */
+fn write_copied_files_manifest(input_playlist_filename: &str, out_path: &str, dest_filenames: &Vec<String>)
+{
+	let playlist_filestem = Path::new(input_playlist_filename).file_stem();
+	let playlist_filename = match playlist_filestem {
+								Some(n) => n.to_str().unwrap(),
+								None    => input_playlist_filename
+							};
+	let manifest_path = Path::new(out_path).join(format!("{playlist}.m3u", playlist=playlist_filename));
+	println!("\nWriting manifest of copied files to {0}", manifest_path.display());
+	
+	match File::create(&manifest_path) {
+		Ok(mut f) => {
+			for filename in dest_filenames.iter() {
+				match writeln!(f, "{}", filename) {
+					Err(why) => {
+						eprintln!("ERROR: Problem encountered while writing manifest file - {}", why);
+						break;
+					}
+					_ => { /* keep going */ }
+				}
+			}
+		},
+		Err(why) => {
+			eprintln!("ERROR: Could not write track manifest to {0:?}", manifest_path);
+			eprintln!("       Reason: {:?}", why)
+		}
+	}
+}
+
 /* --------------------------------------------- */
 
 /* Debug mode showing summary of most salient information about the contents of the playlist */
@@ -265,32 +295,10 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 				}
 			}
 			
-			/* Dump list of copied files to <out_path>/<playlist_filename.xspf.manifest> */
-			let playlist_filestem = Path::new(in_file).file_stem();
-			let playlist_filename = match playlist_filestem {
-										Some(n) => n.to_str().unwrap(),
-										None    => in_file
-									};
-			let manifest_path = Path::new(out).join(format!("{playlist}.m3u", playlist=playlist_filename));
-			println!("\nWriting manifest of copied files to {0}", manifest_path.display());
-			
-			match File::create(&manifest_path) {
-				Ok(mut f) => {
-					for filename in dest_filenames.iter() {
-						match writeln!(f, "{}", filename) {
-							Err(why) => {
-								eprintln!("ERROR: Problem encountered while writing manifest file - {}", why);
-								break;
-							}
-							_ => { /* keep going */ }
-						}
-					}
-				},
-				Err(why) => {
-					eprintln!("ERROR: Could not write track manifest to {0:?}", manifest_path);
-					eprintln!("       Reason: {:?}", why)
-				}
-			}
+			/* Dump list of copied files to <out_path>/<playlist_filename>.m3u
+			 * (i.e. a playable playlist, that also acts as a manifest of the set of files copied)
+			 */
+			write_copied_files_manifest(in_file, out, &dest_filenames);
 		}
 	}
 	else {
