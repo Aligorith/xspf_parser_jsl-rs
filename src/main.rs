@@ -43,7 +43,11 @@ fn print_usage_info()
                            * json      Extracts the useful info out of the file, and dumps to JSON format
                                        in <outfile> for easier handling
                            
-                           * copy      Copies all the files named in the playlist to the nominated folder <outdir>
+                           * copy      Copies all the files named in the playlist to the nominated folder <outdir>.
+                           
+                           * convert   Similar to copy, but it takes an additional <format> arg (command-args[0])
+                                       specifying the output format to convert everything to. Any additional arguments
+                                       after that are passed directly to FFMPEG (assuming FFMPEG is on the path).
                   "
                   );
 	println!("{}", s);
