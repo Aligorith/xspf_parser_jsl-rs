@@ -343,11 +343,12 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 	println!("Convert Files infile='{0}', outdir={1:}", in_file, out_path);
 	
 	/* Check that FFMPEG works/is available... */
-	let ffmpeg_testrun_result = Command::new("ffmpeg").arg("-v")
-									.status()
+	let ffmpeg_testrun_result = Command::new("ffmpeg").arg("-version")
+									.output()
 									.expect("Failed to find and run ffmpeg");
 	
-	if !ffmpeg_testrun_result.success() {
+	println!("ffmpeg test result = {}", ffmpeg_testrun_result.status);
+	if !ffmpeg_testrun_result.status.success() {
 		eprintln!("Aborting: ffmpeg returned abnormal status from test run");
 		process::exit(1);
 	}
