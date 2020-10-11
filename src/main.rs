@@ -27,6 +27,9 @@ mod track_name_info; // XXX: Have this as part of xspf_parser
 
 mod xspf_parser;
 
+/* Aliases */
+use track_name_info::TrackExtension as TrackExtension;
+
 /* ********************************************* */
 
 fn print_usage_info()
@@ -354,8 +357,6 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 	}
 	
 	/* Determine what mode to use, and set the initial arguments for that mode */
-	use track_name_info::TrackExtension as TrackExtension;
-	
 	let mut export_format: TrackExtension = TrackExtension::Placeholder;
 	let mut ffmpeg_args: Vec<String> = Vec::new();
 	
