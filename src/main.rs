@@ -350,7 +350,6 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 									.output()
 									.expect("Failed to find and run ffmpeg");
 	
-	println!("ffmpeg test result = {}", ffmpeg_testrun_result.status);
 	if !ffmpeg_testrun_result.status.success() {
 		eprintln!("Aborting: ffmpeg returned abnormal status from test run");
 		process::exit(1);
@@ -471,11 +470,10 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 			let ffmpeg_convert_command
 				= Command::new("ffmpeg")
 					.args(ffmpeg_args_for_file)
-					//.output()
-					.status()
+					.output()
 					.expect("Failed to find and run ffmpeg");
 					
-			if ffmpeg_convert_command.success() {
+			if ffmpeg_convert_command.status.success() {
 				println!("     Success for {dst_path:?}\n\n",
 				         dst_path = dst_path);
 				dest_filenames.push(dst_filename);
