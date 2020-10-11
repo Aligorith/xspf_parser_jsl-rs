@@ -57,8 +57,8 @@ fn print_usage_info()
 
 /* Type wrapper for these functions
  * Note: This is used instead of a simple type-def as there may be a variable number of arguments required.
- *
- *       Doing it this way means that functions that don't need all the args can be passed ot the same
+ *       
+ *       Doing it this way means that functions that don't need all the args can be passed to the same
  *       basic handler function.
  */
 enum XspfProcessingModeFunc {
@@ -76,6 +76,26 @@ enum XspfProcessingModeFunc {
 }
 
 /* --------------------------------------------- */
+
+/* Extract the vector of args to pass to the (sub)-command being run (e.g. FFMPEG arguments) */
+fn extract_command_args_list(program_args: &Vec<String>, start_index: usize) -> Box<Vec<String>>
+{
+	// 0 = program name, 1 = program mode, 2 = first mode-related arg
+	assert!(start_index >= 2);
+	
+	// Extract the remaining args from the vector
+	let command_args_option = program_args.get(start_index ..);
+	
+	let command_args : Vec<String> =
+		if let Some(command_args_slice) = command_args_option {
+			command_args_slice.to_vec()
+		}
+		else {
+			Vec::new()
+		};
+	
+	return Box::new(command_args);
+}
 
 /* Handle the "out_file" parameter to determine if we're writing to stdout or a named file */
 // FIXME: Handle errors with not being able to open the file
@@ -339,14 +359,7 @@ fn handle_xspf_processing_mode(args: &Vec<String>, processing_func: XspfProcessi
 				},
 				XspfProcessingModeFunc::InOutWithArgs(func) => {
 					/* Input File + Optional Output File + Optional args  */
-					let command_args_option = args.get(4..);
-					let command_args : Vec<String> =
-						if let Some(command_args_slice) = command_args_option {
-							command_args_slice.to_vec()
-						}
-						else {
-							Vec::new()
-						};
+					let command_args = extract_command_args_list(args, 4);
 					
 					/* Run the command */
 					func(in_file, out_file_option, &command_args);
@@ -356,15 +369,7 @@ fn handle_xspf_processing_mode(args: &Vec<String>, processing_func: XspfProcessi
 					let out_path = out_file_option.expect("Output file/directory must be supplied as the 3rd argument to the program");
 					let mode_arg = args.get(4).expect("Mode argument must be supplied as the 4th argument to the program");
 					
-					// TODO: Extract this logic
-					let command_args_option = args.get(5..);
-					let command_args : Vec<String> =
-						if let Some(command_args_slice) = command_args_option {
-							command_args_slice.to_vec()
-						}
-						else {
-							Vec::new()
-						};
+					let command_args = extract_command_args_list(args, 5);
 					
 					/* Run the command */
 					func(in_file, out_path, mode_arg, &command_args);
