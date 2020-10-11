@@ -6,7 +6,7 @@ xspf_parser_jsl-rs
 Usage
 -----
 
-`` $ xspf_tools {mode} {in.xspf} [{outfile/dir}] ``
+`` $ xspf_tools {mode} {in.xspf} [{outfile/dir}] [.sub-mode.   ...command-args...]``
                   
 where {mode} is one of the following:
    * **help**    -  Prints this text
@@ -21,7 +21,7 @@ where {mode} is one of the following:
    * **copy**    -  Copies all the files named in the playlist to the nominated folder {outdir}
                      Their names will get prefixed with metadata such as the track number and date.
                      
-   * convert     -  Similar to copy, but it takes an additional <format> arg (command-args[0])
+   * convert     -  Similar to copy, but it takes an additional {format} arg (command-args[0])
                      specifying the output format to convert everything to. Any additional arguments
                      after that are passed directly to FFMPEG (assuming FFMPEG is on the path).
 

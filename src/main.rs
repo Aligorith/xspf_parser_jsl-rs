@@ -31,7 +31,7 @@ mod xspf_parser;
 fn print_usage_info()
 {
 	let s = indoc!(
-                  "Usage:  xspf_tools <mode> <in.xspf> [<outfile/dir>] [...command-args...]
+                  "Usage:  xspf_tools <mode> <in.xspf> [<outfile/dir>] [.sub-mode.   ...command-args...]
                   
                         where <mode> is one of the following:
                            * help      Prints this text
@@ -51,6 +51,11 @@ fn print_usage_info()
                   "
                   );
 	println!("{}", s);
+	
+	let program_name = env::args().nth(0).unwrap(); /* This is safe, as this is *always* in args */
+	let current_dir  = env::current_dir().unwrap();
+	
+	println!("\n[{0:}] running from {1:?}", program_name, current_dir.display())
 }
 
 /* ********************************************* */
