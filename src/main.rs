@@ -15,6 +15,7 @@ extern crate serde_json;
 
 use std::env;
 use std::process;
+use std::process::Command;
 
 //use std::error::Error;
 use std::fs::{self, File};
@@ -305,7 +306,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 				let src_path = &track.path;
 				let dst_path = Path::new(out).join(dst_filename.to_string());
 				
-				/* perform the copy */
+				/* Perform the copy operation */
 				match fs::copy(src_path, dst_path) {
 					Ok(_)  => {
 						println!("   Copied {src} => <outdir>/{dst}", 
@@ -332,6 +333,162 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 	else {
 		eprintln!("ERROR: The third argument should specify the directory to copy the source files to");
 		process::exit(1);
+	}
+}
+
+
+/* Similar to copy, but converts all the files to the specified format using FFMPEG */
+fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &Vec<String>)
+{
+	println!("Convert Files infile='{0}', outdir={1:}", in_file, out_path);
+	
+	/* Check that FFMPEG works/is available... */
+	let ffmpeg_testrun_result = Command::new("ffmpeg").arg("-v")
+									.status()
+									.expect("Failed to find and run ffmpeg");
+	
+	if !ffmpeg_testrun_result.success() {
+		eprintln!("Aborting: ffmpeg returned abnormal status from test run");
+		process::exit(1);
+	}
+	
+	/* Determine what mode to use, and set the initial arguments for that mode */
+	use track_name_info::TrackExtension as TrackExtension;
+	
+	let mut export_format: TrackExtension = TrackExtension::Placeholder;
+	let mut ffmpeg_args: Vec<String> = Vec::new();
+	
+	match convert_mode.parse::<TrackExtension>() {
+		/* Supported Formats */
+		// XXX: Only audio ones initially, since that's easier than generating visuals for those without them
+		Ok(TrackExtension::mp3) => {
+			export_format = TrackExtension::mp3;
+			
+			ffmpeg_args.push("-vn".to_string()); // Only audio feed
+			//ffmpeg_args.push(format!("-acodec={:?}", export_format).to_string());
+			
+			// TODO: Audio quality
+		},
+		Ok(TrackExtension::flac) => {
+			export_format = TrackExtension::flac;
+			
+			ffmpeg_args.push("-vn".to_string()); // Only audio feed
+			//ffmpeg_args.push(format!("-acodec={:?}", export_format).to_string());
+		},
+		Ok(TrackExtension::ogg) => {
+			export_format = TrackExtension::ogg;
+			
+			ffmpeg_args.push("-vn".to_string()); // Only audio feed
+			//ffmpeg_args.push(format!("-acodec={:?}", export_format).to_string());
+		},
+		
+		/* Unsupported formats - All video formats and Unknown Extensions */
+		Ok(TrackExtension::Unknown(ext)) => {
+			eprintln!("Error: Unsupported/unknown output format ({0:?})", ext);
+			process::exit(1);
+		},
+		Ok(t) => {
+			eprintln!("Error: Cannot export to video format ({0:?})", t);
+			process::exit(1);
+		},
+		
+		/* Parsing Error - Invalid argument */
+		_ => {
+			eprintln!("Error: Parsing error for convert_mode argument");
+			process::exit(1);
+		}
+	}
+	
+	/* Add additional args the user specified on the command-line to also get passed along
+	 * (i.e. allowing for customising the behaviour + tweaking it without recompiling)
+	 */
+	for arg in args {
+		ffmpeg_args.push(arg.to_string());
+	}
+	
+	/* Parse XSPF Playlist... */
+	if let Some(xspf) = xspf_parser::parse_xspf(in_file) {
+		/* Ensure outdir exists */
+		let _dst_path_root = ensure_output_directory_exists(out_path);
+		
+		/* Compute track index width - number of digits of padding to display before the number */
+		let track_index_width = xspf.track_index_width();
+		
+		/* Loop over tracks copying them to the folder */
+		let mut dest_filenames : Vec<String> = Vec::new();
+		
+		for (track_idx, track) in xspf.tracks.iter().enumerate() {
+			/* Construct filename for copied file - it needs to have enough metadata to figure out what's going on */
+			let dst_filename =  if track.info.track_type == track_name_info::TrackType::UnknownType {
+								    /* Just use as-is, since it doesn't follow our rules */
+								    format!("Track_{track_idx:0tixw$}-{fname}.{ext:?}",
+								            track_idx=track_idx + 1,
+								            tixw=track_index_width,
+								            fname=track.filename,
+								            ext=export_format)
+								}
+								else {
+								    /* Reformat the name, using the info we've learned about it */
+								    format!("Track_{track_idx:0tixw$}-{date}-{tt}{index:02}_{name}.{ext:?}",
+								            track_idx=track_idx + 1,
+								            tixw=track_index_width,
+								            date=track.date,
+								            tt=track.info.track_type.shortname_safe(),
+								            index=track.info.index,
+								            name=track.info.name,
+								            ext=export_format)
+								};
+			
+			/* Construct paths to actually perform the copying to/from */
+			let src_path = &track.path;
+			let dst_path = Path::new(out_path).join(dst_filename.to_string());
+			
+			/* Add the file paths to the args to pass to FFMPEG...
+			 * - Input filename needs to come first
+			 * - Output filename needs to go last
+			 */
+			let mut ffmpeg_args_for_file: Vec<String> = Vec::new();
+			
+			for arg in &ffmpeg_args {
+				/* Add each standard arg for this conversion operation */
+				ffmpeg_args_for_file.push(arg.to_string());
+			}
+			
+			ffmpeg_args_for_file.insert(0, "-i".to_string());
+			ffmpeg_args_for_file.insert(1, src_path.as_str().to_string());
+			
+			ffmpeg_args.push(dst_path.to_str().unwrap().to_string());
+			
+			/* Invoke ffmpeg to convert this file... */
+			println!("   Converting {src_path:?} -> {dst_path:?}...",
+			         src_path = src_path, dst_path = dst_path);
+			{
+				println!("      Args = {ffmpeg_args:?}\n", ffmpeg_args = ffmpeg_args_for_file); // debug only
+			}
+			
+			let ffmpeg_convert_command
+				= Command::new("ffmpeg")
+					.args(ffmpeg_args_for_file)
+					//.output()
+					.status()
+					.expect("Failed to find and run ffmpeg");
+					
+			if ffmpeg_convert_command.success() {
+				println!("     Success for {dst_path:?}\n\n",
+				         dst_path = dst_path);
+				dest_filenames.push(dst_filename);
+			}
+			else {
+				eprintln!("     ERROR: Conversion failed for {src_path:?} -> {dst_path:?}!\n\n",
+				          src_path = src_path, dst_path = dst_path);
+				/* Don't abort... try to carry on... */
+			}
+		}
+		
+		/* Dump list of copied files to <out_path>/<playlist_filename>.m3u
+		 * (i.e. a playable playlist, that also acts as a manifest of the set of files copied)
+		 */
+		write_copied_files_manifest(in_file, out_path, &dest_filenames);
 	}
 }
 
@@ -422,6 +579,10 @@ fn main()
 			
 			"copy" => {
 				handle_xspf_processing_mode(&args, XspfProcessingModeFunc::InOut(copy_files_mode));
+			},
+			
+			"convert" => {
+				handle_xspf_processing_mode(&args, XspfProcessingModeFunc::InOutModeWithArgs(convert_files_mode));
 			},
 			
 			"help" => {
