@@ -458,7 +458,7 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 			ffmpeg_args_for_file.insert(0, "-i".to_string());
 			ffmpeg_args_for_file.insert(1, src_path.as_str().to_string());
 			
-			ffmpeg_args.push(dst_path.to_str().unwrap().to_string());
+			ffmpeg_args_for_file.push(dst_path.to_str().unwrap().to_string());
 			
 			/* Invoke ffmpeg to convert this file... */
 			println!("   Converting {src_path:?} -> {dst_path:?}...",
