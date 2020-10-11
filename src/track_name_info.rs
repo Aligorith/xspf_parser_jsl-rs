@@ -93,6 +93,19 @@ impl FromStr for TrackExtension {
 	}
 }
 
+impl ToString for TrackExtension {
+	fn to_string(&self) -> String
+	{
+		match self {
+			/* Special Cases */
+			TrackExtension::Unknown(s) => s.to_string(),
+			
+			/* Standard Case - Use derived solution */
+			_ => format!("{:?}", self).to_string()
+		}
+	}
+}
+
 /* *************************************************** */
 /* Filename Info Components
  *
@@ -247,6 +260,7 @@ mod tests {
 		assert_eq!(TrackExtension::flac,  "flac".parse::<TrackExtension>().unwrap());
 		assert_eq!(TrackExtension::ogg,   "ogg".parse::<TrackExtension>().unwrap());
 		assert_eq!(TrackExtension::m4a,   "m4a".parse::<TrackExtension>().unwrap());
+		assert_eq!(TrackExtension::mkv,   "mkv".parse::<TrackExtension>().unwrap());
 		assert_eq!(TrackExtension::mp4,   "mp4".parse::<TrackExtension>().unwrap());
 	}
 	
@@ -268,6 +282,18 @@ mod tests {
 		
 		/* For the dummy "Err" case that Result<T, E> must have for the FromStr trait */
 		assert_eq!(Err("No Extension?"),                             "".parse::<TrackExtension>());
+	}
+	
+	/* Check TrackExtension enum->string conversion works as intended */
+	#[test]
+	fn test_track_extension_enum_to_string()
+	{
+		assert_eq!("mp3",   TrackExtension::mp3.to_string());
+		assert_eq!("flac",  TrackExtension::flac.to_string());
+		assert_eq!("ogg",   TrackExtension::ogg.to_string());
+		assert_eq!("m4a",   TrackExtension::m4a.to_string());
+		assert_eq!("mkv",   TrackExtension::mkv.to_string());
+		assert_eq!("mp4",   TrackExtension::mp4.to_string());
 	}
 	
 	/* Check that the TrackType shortname stuff works as expected */
