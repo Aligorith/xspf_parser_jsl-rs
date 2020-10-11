@@ -463,9 +463,9 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 			/* Invoke ffmpeg to convert this file... */
 			println!("   Converting {src_path:?} -> {dst_path:?}...",
 			         src_path = src_path, dst_path = dst_path);
-			{
-				println!("      Args = {ffmpeg_args:?}\n", ffmpeg_args = ffmpeg_args_for_file); // debug only
-			}
+			// {
+			// 	println!("      Args = {ffmpeg_args:?}\n", ffmpeg_args = ffmpeg_args_for_file); // debug only
+			// }
 			
 			let ffmpeg_convert_command
 				= Command::new("ffmpeg")
@@ -481,6 +481,10 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 			else {
 				eprintln!("     ERROR: Conversion failed for {src_path:?} -> {dst_path:?}!\n\n",
 				          src_path = src_path, dst_path = dst_path);
+				
+				eprintln!("StdError Output ==============================================");
+				io::stderr().write_all(&ffmpeg_convert_command.stderr).unwrap();
+				eprintln!("==============================================================\n\n\n");
 				/* Don't abort... try to carry on... */
 			}
 		}
