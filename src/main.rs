@@ -68,8 +68,11 @@ enum XspfProcessingModeFunc {
 	/* Default mode that only takes Input (in_file) and Optional Output (out_file) paths */
 	InOut(fn(in_file: &str, out_file: Option<&String>)),
 	
-	/* InOut with additional arguments - a string vector is allowed in this case */
-	InOutWithArgs(fn(in_file: &str, out_file: Option<&String>, args: &Vec<String>)),
+	/* InOut with additional arguments (optional) */
+	InOutWithArgs(fn(in_file:&str, out_file: Option<&String>, args: &Vec<String>)),
+	
+	/* InOut with Mode and additional arguments */
+	InOutModeWithArgs(fn(in_file: &str, out_file: &str, mode: &str, args: &Vec<String>)),
 }
 
 /* --------------------------------------------- */
@@ -335,10 +338,8 @@ fn handle_xspf_processing_mode(args: &Vec<String>, processing_func: XspfProcessi
 					func(in_file, out_file_option);
 				},
 				XspfProcessingModeFunc::InOutWithArgs(func) => {
-					/* Input File + Optional Output File + Optional args (e.g. "convert" mode) */
-					// TODO: Implement the args vector handling - Needs to be a slice...
+					/* Input File + Optional Output File + Optional args  */
 					let command_args_option = args.get(4..);
-					
 					let command_args : Vec<String> =
 						if let Some(command_args_slice) = command_args_option {
 							command_args_slice.to_vec()
@@ -347,7 +348,26 @@ fn handle_xspf_processing_mode(args: &Vec<String>, processing_func: XspfProcessi
 							Vec::new()
 						};
 					
+					/* Run the command */
 					func(in_file, out_file_option, &command_args);
+				},
+				XspfProcessingModeFunc::InOutModeWithArgs(func) => {
+					/* Input File + Mandatory Output File/Directory + Mandatory Mode + Optional Args */
+					let out_path = out_file_option.expect("Output file/directory must be supplied as the 3rd argument to the program");
+					let mode_arg = args.get(4).expect("Mode argument must be supplied as the 4th argument to the program");
+					
+					// TODO: Extract this logic
+					let command_args_option = args.get(5..);
+					let command_args : Vec<String> =
+						if let Some(command_args_slice) = command_args_option {
+							command_args_slice.to_vec()
+						}
+						else {
+							Vec::new()
+						};
+					
+					/* Run the command */
+					func(in_file, out_path, mode_arg, &command_args);
 				}
 			}
 		},
