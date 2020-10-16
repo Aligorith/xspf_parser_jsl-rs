@@ -162,6 +162,16 @@ fn write_copied_files_manifest(input_playlist_filename: &str, out_path: &str, de
 	
 	match File::create(&manifest_path) {
 		Ok(mut f) => {
+			/* Required Header for m3u files */
+			match writeln!(f, "#EXTM3U\n") {
+				Err(why) => {
+					eprintln!("ERROR: Problem encountered while writing manifest file - {}", why);
+					return;
+				}
+				_ => { /* keep going */}
+			}
+			
+			/* Rest of file */
 			for filename in dest_filenames.iter() {
 				match writeln!(f, "{}", filename) {
 					Err(why) => {
