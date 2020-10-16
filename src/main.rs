@@ -195,6 +195,8 @@ fn dump_output_mode(in_file: &str)
 }
 
 
+/* ................................ */
+
 /* Extract filenames for all tracks from the playlist */
 fn list_output_mode(in_file: &str, out_file: Option<&String>)
 {
@@ -216,6 +218,7 @@ fn list_output_mode(in_file: &str, out_file: Option<&String>)
 	}
 }
 
+/* ................................ */
 
 /* Extract all the relevant info from playlist, and dump it into a JSON file for further processing */
 fn json_output_mode(in_file: &str, out_file: Option<&String>)
@@ -247,6 +250,7 @@ fn json_output_mode(in_file: &str, out_file: Option<&String>)
 	}
 }
 
+/* ................................ */
 
 /* Compute and display summary of total playing time of playlist */
 fn total_duration_mode(in_file: &str)
@@ -268,6 +272,7 @@ fn total_duration_mode(in_file: &str)
 	}
 }
 
+/* ................................ */
 
 /* Copy all files listed in playlist to a single folder */
 fn copy_files_mode(in_file: &str, out_path: Option<&String>)
@@ -339,6 +344,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 	}
 }
 
+/* ................................ */
 
 /* Similar to copy, but converts all the files to the specified format using FFMPEG */
 fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &Vec<String>)
@@ -419,6 +425,8 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 		let mut dest_filenames : Vec<String> = Vec::new();
 		
 		for (track_idx, track) in xspf.tracks.iter().enumerate() {
+			// TODO: Do NOT re-encode if the file is in the target format already! This risks losing quality!
+			
 			/* Construct filename for copied file - it needs to have enough metadata to figure out what's going on */
 			let dst_filename =  if track.info.track_type == track_name_info::TrackType::UnknownType {
 								    /* Just use as-is, since it doesn't follow our rules */
