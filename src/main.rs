@@ -425,7 +425,7 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 								    format!("Track_{track_idx:0tixw$}-{fname}.{ext:?}",
 								            track_idx=track_idx + 1,
 								            tixw=track_index_width,
-								            fname=track.filename,
+								            fname=track.info.name, /* info.name will has everything in it already */
 								            ext=export_format)
 								}
 								else {
