@@ -374,7 +374,7 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 	}
 	
 	/* Determine what mode to use, and set the initial arguments for that mode */
-	let mut export_format: TrackExtension = TrackExtension::Placeholder;
+	let export_format: TrackExtension; /* = TrackExtension::Placeholder; */
 	let mut ffmpeg_args: Vec<String> = Vec::new();
 	
 	match convert_mode.parse::<TrackExtension>() {
