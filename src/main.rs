@@ -35,7 +35,7 @@ use track_name_info::TrackExtension as TrackExtension;
 fn print_usage_info()
 {
 	let s = indoc!(
-                  "Usage:  xspf_tools <mode> <in.xspf> [<outfile/dir>] [.sub-mode.   ...command-args...]
+                  "Usage:  xspf_tools <mode> <in.xspf> [<outfile/dir>] [<sub-mode>   [<...command-args...>]]
                   
                         where <mode> is one of the following:
                            * help      Prints this text
@@ -49,9 +49,11 @@ fn print_usage_info()
                            
                            * copy      Copies all the files named in the playlist to the nominated folder <outdir>.
                            
-                           * convert   Similar to copy, but it takes an additional <format> arg (command-args[0])
+                           * convert   Similar to copy, but it takes an additional <format> arg (i.e. ''<sub-mode>'')
                                        specifying the output format to convert everything to. Any additional arguments
                                        after that are passed directly to FFMPEG (assuming FFMPEG is on the path).
+                                       
+                                       Supported formats: mp3, flac, ogg
                   "
                   );
 	println!("{}", s);
