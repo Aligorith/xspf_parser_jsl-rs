@@ -54,6 +54,7 @@ impl TrackType {
 #[allow(non_camel_case_types)]
 #[derive(Debug)]
 #[derive(PartialEq)]
+#[derive(Clone)] /* NOTE: "Copy" can't be added here, as "String" doesn't support "Copy" traits */
 pub enum TrackExtension {
 	/* Placeholder - Only used when constructing the type */
 	Placeholder,

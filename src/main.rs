@@ -28,6 +28,7 @@ mod track_name_info; // XXX: Have this as part of xspf_parser
 mod xspf_parser;
 
 /* Aliases */
+use xspf_parser::Track as Track;
 use track_name_info::TrackExtension as TrackExtension;
 
 /* ********************************************* */
@@ -284,6 +285,46 @@ fn total_duration_mode(in_file: &str)
 	}
 }
 
+/* --------------------------------------------- */
+
+/* Helper for copy_files_mode() and convert_files_mode():
+ * Get output filename for copying or converting a track
+ */
+fn track_get_destination_filename(track: &Track, 
+                                  track_idx: usize, 
+                                  track_index_width: usize, 
+                                  extension_override: Option<TrackExtension>)
+								  -> String
+{
+	/* Determine what the new file's extension should be */
+	let extension = match extension_override {
+		Some(s) => s,
+		None => track.info.extn.clone()
+	};
+	
+	/* Return result of the following expression - which should be a string */
+	if track.info.track_type == track_name_info::TrackType::UnknownType {
+		/* Just use as-is, since it doesn't follow our rules */
+		format!("Track_{track_idx:0tixw$}-{fname}.{ext:?}",
+			track_idx=track_idx + 1,
+			tixw=track_index_width,
+			fname=track.info.name, /* info.name will has everything in it already */
+			ext=extension)
+		.to_string()
+	}
+	else {
+		/* Reformat the name, using the info we've learned about it */
+		format!("Track_{track_idx:0tixw$}-{date}-{tt}{index:02}_{name}.{ext:?}",
+			track_idx=track_idx + 1,
+			tixw=track_index_width,
+			date=track.date,
+			tt=track.info.track_type.shortname_safe(),
+			index=track.info.index,
+			name=track.info.name,
+			ext=extension)
+		.to_string()
+	}
+}
 /* ................................ */
 
 /* Copy all files listed in playlist to a single folder */
@@ -303,24 +344,7 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 			
 			for (track_idx, track) in xspf.tracks.iter().enumerate() {
 				/* Construct filename for copied file - it needs to have enough metadata to figure out what's going on */
-				let dst_filename =  if track.info.track_type == track_name_info::TrackType::UnknownType {
-									    /* Just use as-is, since it doesn't follow our rules */
-									    format!("Track_{track_idx:0tixw$}-{fname}",
-									            track_idx=track_idx + 1,
-									            tixw=track_index_width,
-									            fname=track.filename)
-									}
-									else {
-									    /* Reformat the name, using the info we've learned about it */
-									    format!("Track_{track_idx:0tixw$}-{date}-{tt}{index:02}_{name}.{ext:?}",
-									            track_idx=track_idx + 1,
-									            tixw=track_index_width,
-									            date=track.date,
-									            tt=track.info.track_type.shortname_safe(),
-									            index=track.info.index,
-									            name=track.info.name,
-									            ext=track.info.extn)
-									};
+				let dst_filename = track_get_destination_filename(track, track_idx, track_index_width, None);
 				
 				/* Construct paths to actually perform the copying to/from */
 				let src_path = &track.path;
@@ -440,25 +464,7 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 			// TODO: Do NOT re-encode if the file is in the target format already! This risks losing quality!
 			
 			/* Construct filename for copied file - it needs to have enough metadata to figure out what's going on */
-			let dst_filename =  if track.info.track_type == track_name_info::TrackType::UnknownType {
-								    /* Just use as-is, since it doesn't follow our rules */
-								    format!("Track_{track_idx:0tixw$}-{fname}.{ext:?}",
-								            track_idx=track_idx + 1,
-								            tixw=track_index_width,
-								            fname=track.info.name, /* info.name will has everything in it already */
-								            ext=export_format)
-								}
-								else {
-								    /* Reformat the name, using the info we've learned about it */
-								    format!("Track_{track_idx:0tixw$}-{date}-{tt}{index:02}_{name}.{ext:?}",
-								            track_idx=track_idx + 1,
-								            tixw=track_index_width,
-								            date=track.date,
-								            tt=track.info.track_type.shortname_safe(),
-								            index=track.info.index,
-								            name=track.info.name,
-								            ext=export_format)
-								};
+			let dst_filename = track_get_destination_filename(track, track_idx, track_index_width, Some(export_format.clone()));
 			
 			/* Construct paths to actually perform the copying to/from */
 			let src_path = &track.path;
