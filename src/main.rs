@@ -287,14 +287,14 @@ fn total_duration_mode(in_file: &str)
 
 /* --------------------------------------------- */
 
-/* Helper for copy_files_mode() and convert_files_mode():
- * Get output filename for copying or converting a track
+/* Get output filename for copying or converting a track
+ * Helper for copy_files_mode() and convert_files_mode()
  */
 fn track_get_destination_filename(track: &Track, 
                                   track_idx: usize, 
                                   track_index_width: usize, 
                                   extension_override: Option<TrackExtension>)
-								  -> String
+	-> String
 {
 	/* Determine what the new file's extension should be */
 	let extension = match extension_override {
@@ -325,6 +325,93 @@ fn track_get_destination_filename(track: &Track,
 		.to_string()
 	}
 }
+
+/* ................................ */
+
+/* Copy a track from src_path to dst_path
+ * Helper for copy_files_mode()
+ * > returns success of the copy operation
+ */
+fn copy_track(src_path: &str, dst_path: &str) -> bool
+{
+	match fs::copy(src_path, dst_path) {
+		Ok(_)  => {
+			println!("   Copied {src} => <outdir>/{dst}", 
+			         src=src_path, dst=dst_path);
+			
+			/* Report success */
+			return true;
+		},
+		Err(e) => {
+			eprintln!("! ERROR: Couldn't copy {src} => <ourdir>/{dst}!",
+			          src=src_path, dst=dst_path);
+			eprintln!("  Reason: {}", e);
+			
+			/* XXX: Should we stop instead? We don't have any other way to keep going otherwise! */
+			//process::exit(1);
+			
+			/* Report failure */
+			return false;
+		}
+	}
+}
+
+/* Convert a track from one format to another, based on the filename extensions
+ * Helper for convert_files_mode()
+ * > returns success of the convert operation
+ */
+fn convert_track(src_path: &str, dst_path: &str, ffmpeg_args: &Vec<String>) -> bool
+{
+	/* Add the file paths to the args to pass to FFMPEG...
+	 * - Input filename needs to come first
+	 * - Output filename needs to go last
+	 */
+	let mut ffmpeg_args_for_file: Vec<String> = Vec::new();
+	
+	for arg in ffmpeg_args {
+		/* Add each standard arg for this conversion operation */
+		ffmpeg_args_for_file.push(arg.to_string());
+	}
+	
+	ffmpeg_args_for_file.insert(0, "-i".to_string());
+	ffmpeg_args_for_file.insert(1, src_path.to_string());
+	
+	ffmpeg_args_for_file.push(dst_path.to_string());
+	
+	/* Invoke ffmpeg to convert this file... */
+	println!("   Converting {src_path:?} -> {dst_path:?}...",
+	         src_path = src_path, dst_path = dst_path);
+	// {
+	// 	println!("      Args = {ffmpeg_args:?}\n", ffmpeg_args = ffmpeg_args_for_file); // debug only
+	// }
+	
+	let ffmpeg_convert_command
+		= Command::new("ffmpeg")
+			.args(ffmpeg_args_for_file)
+			.output()
+			.expect("Failed to find and run ffmpeg");
+			
+	if ffmpeg_convert_command.status.success() {
+		println!("     Success for {dst_path:?}\n\n",
+		         dst_path = dst_path);
+		
+		/* Report success */
+		return true;
+	}
+	else {
+		eprintln!("     ERROR: Conversion failed for {src_path:?} -> {dst_path:?}!\n\n",
+		          src_path = src_path, dst_path = dst_path);
+		
+		eprintln!("StdError Output ==============================================");
+		io::stderr().write_all(&ffmpeg_convert_command.stderr).unwrap();
+		eprintln!("==============================================================\n\n\n");
+		/* Don't abort... try to carry on... */
+		
+		/* Report failure */
+		return false;
+	}
+}
+
 /* ................................ */
 
 /* Copy all files listed in playlist to a single folder */
@@ -348,23 +435,13 @@ fn copy_files_mode(in_file: &str, out_path: Option<&String>)
 				
 				/* Construct paths to actually perform the copying to/from */
 				let src_path = &track.path;
-				let dst_path = Path::new(out).join(dst_filename.to_string());
+				let dst_path = Path::new(out).join(dst_filename.to_string())
+				                             .into_os_string().into_string().unwrap();
 				
 				/* Perform the copy operation */
-				match fs::copy(src_path, dst_path) {
-					Ok(_)  => {
-						println!("   Copied {src} => <outdir>/{dst}", 
-						         src=track.filename, dst=dst_filename);
-						dest_filenames.push(dst_filename);
-					},
-					Err(e) => {
-						eprintln!("! ERROR: Couldn't copy {src} => <ourdir>/{dst}!",
-						          src=track.filename, dst=dst_filename);
-						eprintln!("  Reason: {}", e);
-						
-						/* XXX: Should we stop instead? We don't have any other way to keep going otherwise! */
-						//process::exit(1);
-					}
+				if copy_track(src_path, &dst_path) {
+					/* Success - Note this as one of the successful files */
+					dest_filenames.push(dst_filename);
 				}
 			}
 			
@@ -445,6 +522,7 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 	/* Add additional args the user specified on the command-line to also get passed along
 	 * (i.e. allowing for customising the behaviour + tweaking it without recompiling)
 	 */
+	// XXX: Reconsider this if we want to provide options for the behaviour of this mode (that do not get sent to FFMPEG!)
 	for arg in args {
 		ffmpeg_args.push(arg.to_string());
 	}
@@ -468,50 +546,13 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 			
 			/* Construct paths to actually perform the copying to/from */
 			let src_path = &track.path;
-			let dst_path = Path::new(out_path).join(dst_filename.to_string());
+			let dst_path = Path::new(out_path).join(dst_filename.to_string())
+			                                  .into_os_string().into_string().unwrap();
 			
-			/* Add the file paths to the args to pass to FFMPEG...
-			 * - Input filename needs to come first
-			 * - Output filename needs to go last
-			 */
-			let mut ffmpeg_args_for_file: Vec<String> = Vec::new();
-			
-			for arg in &ffmpeg_args {
-				/* Add each standard arg for this conversion operation */
-				ffmpeg_args_for_file.push(arg.to_string());
-			}
-			
-			ffmpeg_args_for_file.insert(0, "-i".to_string());
-			ffmpeg_args_for_file.insert(1, src_path.as_str().to_string());
-			
-			ffmpeg_args_for_file.push(dst_path.to_str().unwrap().to_string());
-			
-			/* Invoke ffmpeg to convert this file... */
-			println!("   Converting {src_path:?} -> {dst_path:?}...",
-			         src_path = src_path, dst_path = dst_path);
-			// {
-			// 	println!("      Args = {ffmpeg_args:?}\n", ffmpeg_args = ffmpeg_args_for_file); // debug only
-			// }
-			
-			let ffmpeg_convert_command
-				= Command::new("ffmpeg")
-					.args(ffmpeg_args_for_file)
-					.output()
-					.expect("Failed to find and run ffmpeg");
-					
-			if ffmpeg_convert_command.status.success() {
-				println!("     Success for {dst_path:?}\n\n",
-				         dst_path = dst_path);
+			/* Perform convert operation */
+			if convert_track(src_path, &dst_path, &ffmpeg_args) {
+				/* Success - Note this as one of the successful files */
 				dest_filenames.push(dst_filename);
-			}
-			else {
-				eprintln!("     ERROR: Conversion failed for {src_path:?} -> {dst_path:?}!\n\n",
-				          src_path = src_path, dst_path = dst_path);
-				
-				eprintln!("StdError Output ==============================================");
-				io::stderr().write_all(&ffmpeg_convert_command.stderr).unwrap();
-				eprintln!("==============================================================\n\n\n");
-				/* Don't abort... try to carry on... */
 			}
 		}
 		
@@ -521,7 +562,6 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 		write_copied_files_manifest(in_file, out_path, &dest_filenames);
 	}
 }
-
 
 /* --------------------------------------------- */
 
