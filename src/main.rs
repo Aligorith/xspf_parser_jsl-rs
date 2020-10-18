@@ -539,8 +539,6 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 		let mut dest_filenames : Vec<String> = Vec::new();
 		
 		for (track_idx, track) in xspf.tracks.iter().enumerate() {
-			// TODO: Do NOT re-encode if the file is in the target format already! This risks losing quality!
-			
 			/* Construct filename for copied file - it needs to have enough metadata to figure out what's going on */
 			let dst_filename = track_get_destination_filename(track, track_idx, track_index_width, Some(export_format.clone()));
 			
@@ -549,10 +547,23 @@ fn convert_files_mode(in_file: &str, out_path: &str, convert_mode: &str, args: &
 			let dst_path = Path::new(out_path).join(dst_filename.to_string())
 			                                  .into_os_string().into_string().unwrap();
 			
-			/* Perform convert operation */
-			if convert_track(src_path, &dst_path, &ffmpeg_args) {
-				/* Success - Note this as one of the successful files */
-				dest_filenames.push(dst_filename);
+			/* Convert or copy this track:
+			 * Do not convert if the file is already in the desired format, as converting files multiple times
+			 * will cause quality loss each time this happens.
+			 */
+			if track.info.extn == export_format {
+				/* Just perform copy operation */
+				if copy_track(src_path, &dst_path) {
+					/* Success - Note this as one of the successful files */
+					dest_filenames.push(dst_filename);
+				}
+			}
+			else {
+				/* Perform convert operation */
+				if convert_track(src_path, &dst_path, &ffmpeg_args) {
+					/* Success - Note this as one of the successful files */
+					dest_filenames.push(dst_filename);
+				}
 			}
 		}
 		
